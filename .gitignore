@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments and local configuration
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+!.env.example
+
+# Packaging and test artifacts
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# CUDA, compiler, and local build artifacts
+*.obj
+*.o
+*.so
+*.dll
+*.pyd
+*.exp
+*.lib
+*.ninja
+CMakeFiles/
+CMakeCache.txt
+
+# Downloaded and generated model artifacts
+pretrained_models/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.dat
+*.dat.bz2
+
+# Generated inference and transformation data
+inference_output*/
+sam_single_image_input/
+outputs/
+output/
+results/
+checkpoints/
+logs/
+wandb/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
