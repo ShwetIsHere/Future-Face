@@ -4,6 +4,10 @@ __pycache__/
 *$py.class
 *.so
 
+# Folder
+images/
+SAM/
+
 # Virtual environments and local configuration
 .venv/
 venv/
@@ -74,3 +78,6 @@ wandb/
 *.bak
 *.swp
 *.swo
+
+# Bat file
+Run_SAM_Age_Transformation.bat
