@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <p align="center">
   <img src="demo_images/demo1.jpg" alt="Demo 1" width="540">
   <img src="demo_images/demo2.jpg" alt="Demo 2" width="540">
@@ -310,4 +309,3 @@ DELIVERABLES
 - Keep the original input images private unless you intentionally choose to share them.
 =======
 # Future-Face
->>>>>>> origin/main
