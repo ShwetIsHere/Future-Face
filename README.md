@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center">
   <img src="demo_images/demo1.jpg" alt="Demo 1" width="540">
   <img src="demo_images/demo2.jpg" alt="Demo 2" width="540">
@@ -307,3 +308,6 @@ DELIVERABLES
 - Do not share personal Windows paths as universal paths. Replace them with instructions for discovering each user's paths.
 - Include the repository's license and any required model/dataset attribution when redistributing.
 - Keep the original input images private unless you intentionally choose to share them.
+=======
+# Future-Face
+>>>>>>> origin/main
