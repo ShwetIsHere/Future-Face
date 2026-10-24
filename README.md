@@ -1,7 +1,9 @@
 <p align="center">
-  <img src="demo_images/demo1.jpg" alt="Demo 1" width="540">
-  <img src="demo_images/demo2.jpg" alt="Demo 2" width="540">
+  <img src="demo/demo1.jpg" alt="Demo 1" width="49%">
+  <img src="demo/demo2.jpg" alt="Demo 2" width="49%">
 </p>
+
+![Project Demo](demo\Future-Facec-demo.gif)
 
 Future-Face estimates a face's age from an image, then uses the age-transformation model to generate a face at a requested age. The launcher is a Windows `.bat` file that starts the Python application inside a Conda environment.
 
