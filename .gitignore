@@ -301,3 +301,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+web_sessions/

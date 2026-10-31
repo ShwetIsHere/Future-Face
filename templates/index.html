@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Future-Face — AI Age Transformation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css?v=3.0">
+</head>
+<body>
+  <div class="background-glow"></div>
+  <div class="background-grid"></div>
+
+  <!-- Header matching heyshwet.me portfolio design -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <a href="/" class="brand-link">
+          <div class="logo-badge">SP</div>
+          <div class="brand-text">
+            <h1 class="brand-title">Future-Face</h1>
+            <p class="brand-subtitle">AI Age Transformation</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-actions">
+        <!-- GPU / System Status Pill -->
+        <div class="system-status" id="systemStatus" title="System Hardware Status">
+          <span class="status-dot"></span>
+          <span class="status-text" id="statusDevice">GPU Ready</span>
+        </div>
+
+        <!-- Portfolio Link -->
+        <a href="https://heyshwet.me" target="_blank" rel="noopener noreferrer" class="portfolio-btn" title="Visit Shwet Patel's Portfolio">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span class="portfolio-btn-text">heyshwet.me</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ext-icon">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </a>
+
+        <!-- Dark / Light Theme Toggle -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle theme" title="Switch Theme (Dark / Light)">
+          <!-- Moon Icon (for dark mode) -->
+          <svg class="theme-icon moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <!-- Sun Icon (for light mode) -->
+          <svg class="theme-icon sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-main">
+    
+    <!-- STEP 1: Input Choice (Camera or Upload) -->
+    <section class="card step-card active" id="stepInput">
+      <div class="card-header">
+        <div class="step-badge">Step 1</div>
+        <h2>Select Your Portrait</h2>
+        <p>Choose whether to capture live from your camera or upload a photo.</p>
+      </div>
+
+      <!-- Input Tabs -->
+      <div class="tab-controls">
+        <button class="tab-btn active" id="tabCameraBtn" data-tab="tabCamera">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          Live Camera
+        </button>
+        <button class="tab-btn" id="tabUploadBtn" data-tab="tabUpload">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Upload Image
+        </button>
+      </div>
+
+      <!-- Tab 1: Live Camera View -->
+      <div class="tab-panel active" id="tabCamera">
+        <div class="camera-viewport-wrapper">
+          <!-- Camera Container with strict state management (state-off, state-streaming, state-captured) -->
+          <div class="camera-viewport state-off" id="cameraViewport">
+            <!-- 1. Off state placeholder -->
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <div class="camera-placeholder-icon">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </div>
+              <p class="placeholder-title">Live Camera is Off</p>
+              <p class="placeholder-desc">Click below to start video preview</p>
+              <button class="btn btn-primary" id="btnStartCamera">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Start Live Camera
+              </button>
+            </div>
+
+            <!-- 2. Active Video Stream -->
+            <video id="webcamVideo" autoplay playsinline muted></video>
+
+            <!-- 3. Face Guide Oval (Only visible while streaming) -->
+            <div class="face-guide-overlay" id="faceGuide">
+              <div class="face-guide-oval"></div>
+              <span class="guide-text">Position face inside oval</span>
+            </div>
+
+            <!-- 4. Hidden Canvas for Frame Capture -->
+            <canvas id="snapshotCanvas" class="hidden"></canvas>
+
+            <!-- 5. Captured Snapshot Preview -->
+            <img id="cameraSnapshotPreview" class="snapshot-preview" alt="Snapshot Preview">
+          </div>
+        </div>
+
+        <!-- Controls while camera is streaming -->
+        <div class="camera-controls hidden" id="cameraActiveControls">
+          <button class="btn btn-secondary btn-icon-only hidden" id="btnFlipCamera" title="Switch Camera (Front/Rear)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 16v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"></path>
+              <polyline points="16 8 20 12 16 16"></polyline>
+            </svg>
+          </button>
+          <button class="btn btn-primary btn-large" id="btnCapturePhoto">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="4" fill="currentColor"></circle>
+            </svg>
+            Capture Photo
+          </button>
+          <button class="btn btn-secondary" id="btnStopCamera">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="6" width="12" height="12"></rect>
+            </svg>
+            Stop
+          </button>
+        </div>
+
+        <!-- Controls after snapshot is taken -->
+        <div class="snapshot-actions hidden" id="snapshotActions">
+          <button class="btn btn-secondary" id="btnRetakePhoto">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            Retake
+          </button>
+          <button class="btn btn-primary btn-large" id="btnConfirmSnapshot">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Use This Photo &amp; Estimate Age
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Upload Image View -->
+      <div class="tab-panel" id="tabUpload">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
+          <div class="dropzone-content" id="dropzoneContent">
+            <div class="dropzone-icon">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3>Drag &amp; drop your image here</h3>
+            <p>or <span class="highlight-link">browse file from your device</span></p>
+            <span class="file-limits">Supports JPG, PNG, WEBP</span>
+          </div>
+
+          <div class="dropzone-preview hidden" id="dropzonePreview">
+            <img id="uploadPreviewImg" alt="Upload Preview">
+            <button class="btn btn-secondary btn-sm" id="btnChangeUpload">Change Photo</button>
+          </div>
+        </div>
+
+        <div class="upload-action-btn hidden" id="uploadActionContainer">
+          <button class="btn btn-primary btn-large btn-block" id="btnProcessUpload">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Detect Face &amp; Estimate Age
+          </button>
+        </div>
+
+        <!-- Sample Portraits Picker -->
+        <div class="samples-section" id="samplesSection">
+          <div class="samples-title">Or test with demo portraits:</div>
+          <div class="samples-grid" id="samplesGrid">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Age Estimation Result & Prediction Shift Input -->
+    <section class="card step-card hidden" id="stepAgeEstimate">
+      <div class="card-header">
+        <div class="step-badge">Step 2</div>
+        <h2>Estimated Age &amp; Transformation Target</h2>
+        <p>Review the AI age estimate, then specify how many years into the future or past to transform.</p>
+      </div>
+
+      <div class="estimate-summary-box">
+        <div class="crop-avatar-wrap">
+          <img id="croppedFaceImg" class="crop-avatar" alt="Detected Face">
+          <div class="avatar-badge">YuNet 224×224</div>
+        </div>
+        <div class="estimate-info">
+          <span class="info-label">AI ESTIMATED AGE</span>
+          <div class="age-value-display">
+            <span class="age-number" id="displayEstimatedAge">--</span>
+            <span class="age-unit">years old</span>
+          </div>
+          <div class="ai-model-tag">ResNet-50 Regression Model</div>
+        </div>
+      </div>
+
+      <!-- Age Transformation Shift Selector -->
+      <div class="shift-selection-card">
+        <div class="shift-header">
+          <label for="yearsSlider" class="shift-title">How many years do you want to transform?</label>
+          <div class="years-input-group">
+            <input type="number" id="yearsNumberInput" min="-80" max="80" value="10" class="years-num-field">
+            <span class="years-unit">years</span>
+          </div>
+        </div>
+
+        <!-- Slider with dynamic bounds (8 to 90 years) -->
+        <div class="slider-wrapper">
+          <input type="range" id="yearsSlider" min="-80" max="80" value="10" step="1" class="custom-range-slider">
+          <div class="slider-ticks">
+            <span id="sliderTickMin">Min (8 yrs)</span>
+            <span id="sliderTickCenter" class="tick-center">0 (Current)</span>
+            <span id="sliderTickMax">Max (90 yrs)</span>
+          </div>
+        </div>
+
+        <!-- Preset Chips Container -->
+        <div class="preset-chips-wrap">
+          <span class="preset-label">Quick Presets:</span>
+          <div class="preset-chips" id="presetChipsContainer">
+            <!-- Dynamically populated to guarantee 8 to 90 age range -->
+          </div>
+        </div>
+
+        <!-- Target Age Prediction Banner -->
+        <div class="target-age-banner" id="targetAgeBanner">
+          <div class="banner-icon" id="bannerDirectionIcon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 4 15 12 5 20 5 4"></polygon>
+              <line x1="19" y1="5" x2="19" y2="19"></line>
+            </svg>
+          </div>
+          <div class="banner-details">
+            <div class="banner-summary" id="bannerSummaryText">
+              Transforming <span class="highlight-val">+10 years</span> into the future
+            </div>
+            <div class="banner-target-calc">
+              Estimated <span id="bannerEstAge">21</span> + Shift <span id="bannerShift">10</span> = 
+              <strong>Target Age: <span id="bannerTargetAge">31</span> years</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card-action-row">
+          <button class="btn btn-secondary" id="btnBackToInput">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Choose Another Photo
+          </button>
+          <button class="btn btn-primary btn-large" id="btnExecuteTransform">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+            Transform Face Now
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOADING / GENERATION PROGRESS OVERLAY -->
+    <div class="progress-overlay hidden" id="progressOverlay">
+      <div class="progress-box">
+        <div class="radar-scanner">
+          <div class="radar-sweep"></div>
+          <div class="scanner-face-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 15h8"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+          </div>
+        </div>
+        <h3 id="progressTitle">Synthesizing Age Transformation...</h3>
+        <p id="progressSubtitle">SAM StyleGAN2 model is generating facial age changes. This takes ~10–20 seconds on GPU.</p>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Results Display -->
+    <section class="card step-card hidden" id="stepResult">
+      <div class="card-header result-header">
+        <div class="step-badge success-badge">Transformation Complete</div>
+        <h2>Your Age-Transformed Face</h2>
+        <p id="resultSubtitle">Generated using StyleGAN2 pixel2style2pixel age regression.</p>
+      </div>
+
+      <!-- Result View Mode Toggle -->
+      <div class="view-mode-tabs">
+        <button class="view-mode-btn active" id="btnViewSplit" data-view="split">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="12" y1="3" x2="12" y2="21"></line>
+          </svg>
+          Before &amp; After Slider
+        </button>
+        <button class="view-mode-btn" id="btnViewSide" data-view="side">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="18" rx="2"></rect>
+            <line x1="2" y1="9" x2="22" y2="9"></line>
+          </svg>
+          Comparison Poster
+        </button>
+      </div>
+
+      <!-- Result View 1: Interactive Before/After Split Slider -->
+      <div class="result-view-panel active" id="viewSplitPanel">
+        <!-- Clean External Labels Bar (Above the image, avoids clipping/covering face) -->
+        <div class="slider-labels-header">
+          <div class="slider-badge badge-orig">
+            <span class="badge-dot dot-cyan"></span>
+            <span id="sliderBadgeOrig">Original (Age --)</span>
+          </div>
+          <div class="slider-badge badge-trans">
+            <span class="badge-dot dot-purple"></span>
+            <span id="sliderBadgeTrans">Transformed (Age --)</span>
+          </div>
+        </div>
+
+        <div class="split-slider-container" id="splitSliderContainer">
+          <!-- Transformed Face (Base) -->
+          <img id="imgSplitTransformed" class="split-img-after" alt="Transformed Face">
+
+          <!-- Original Face (Clipped by CSS clip-path) -->
+          <div class="split-img-before-wrap" id="splitBeforeWrap">
+            <img id="imgSplitOriginal" class="split-img-before" alt="Original Face">
+          </div>
+
+          <!-- Divider Handle -->
+          <div class="split-handle" id="splitHandle">
+            <div class="handle-line"></div>
+            <div class="handle-circle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <p class="slider-hint">Drag or swipe the divider horizontally to compare before and after transformation</p>
+      </div>
+
+      <!-- Result View 2: High-Resolution Poster Card -->
+      <div class="result-view-panel" id="viewSidePanel">
+        <div class="poster-preview-container">
+          <img id="imgComparisonPoster" class="poster-image" alt="Side-by-Side Comparison Poster">
+        </div>
+      </div>
+
+      <!-- Results Stats Banner -->
+      <div class="results-stats-row">
+        <div class="stat-cell">
+          <span class="stat-label">Estimated Original</span>
+          <span class="stat-value" id="statOrigAge">-- yrs</span>
+        </div>
+        <div class="stat-divider">➔</div>
+        <div class="stat-cell">
+          <span class="stat-label">Shift</span>
+          <span class="stat-value highlight" id="statShift">-- yrs</span>
+        </div>
+        <div class="stat-divider">➔</div>
+        <div class="stat-cell">
+          <span class="stat-label">Target Age</span>
+          <span class="stat-value success" id="statTargetAge">-- yrs</span>
+        </div>
+      </div>
+
+      <!-- Results Action Buttons -->
+      <div class="result-actions-row">
+        <button class="btn btn-secondary" id="btnTryAnotherAge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Try Another Age Shift
+        </button>
+        <button class="btn btn-secondary" id="btnRestartAll">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          New Photo
+        </button>
+        <a id="btnDownloadPoster" class="btn btn-primary" download="Future-Face_Comparison.jpg" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download Comparison Poster
+        </a>
+      </div>
+    </section>
+
+    <!-- Error Toast Notification -->
+    <div class="error-toast hidden" id="errorToast">
+      <div class="toast-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="toast-message" id="toastMessage">An error occurred.</div>
+      <button class="toast-close" id="toastClose">&times;</button>
+    </div>
+
+  </main>
+
+  <!-- Footer matching portfolio styling -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <p class="copyright">&copy; 2026 <strong>Future-Face</strong> &bull; Developed by <a href="https://heyshwet.me" target="_blank" rel="noopener noreferrer" class="footer-author-link">Shwet Patel (heyshwet.me)</a></p>
+      </div>
+      <div class="footer-right">
+        <span class="footer-tech">YuNet &bull; ResNet-50 &bull; SAM StyleGAN2</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js?v=3.0"></script>
+</body>
+</html>

@@ -15,8 +15,15 @@ The current project location is:
 
 ```text
 E:\Face Convert\Fature-Face\
-├── Future-Face.py
-├── Future-Face.bat
+├── app.py                              # Flask Web Application Backend
+├── Future-Face-Web.bat                 # 1-Click Web App Launcher
+├── Future-Face.py                      # Desktop GUI Application
+├── Future-Face.bat                     # Desktop GUI Launcher
+├── templates/
+│   └── index.html                      # Web App UI (Webcam + Upload)
+├── static/
+│   ├── css/style.css                   # Futuristic dark styling
+│   └── js/app.js                       # WebRTC Camera, Sliders & API
 ├── Future-Face_Comparison.jpg          # created after a successful run
 ├── models\
 │   ├── Future-Face-ResNet50-Final.pth
@@ -187,6 +194,19 @@ pause
 This is a minimal example, not a guaranteed replacement for the full existing `Future-Face.bat`. Preserve any extra validation already present in your launcher.
 
 ## 7. Run the application
+
+### Option A: Modern Web Application (Recommended)
+
+1. Double-click **Future-Face-Web.bat** (or run python app.py from sam_env).
+2. The launcher initializes MSVC C++ tools, validates models, starts the Flask server, and automatically opens your browser at **http://127.0.0.1:5000**.
+3. In the web interface:
+   - **Option 1 (Live Camera)**: Click *Start Live Camera*, align your face within the guide oval, and click *Capture Photo*.
+   - **Option 2 (Upload Image)**: Drag and drop an existing portrait or select a sample image.
+4. **Step 2 (Age Estimation)**: YuNet crops the face and ResNet-50 estimates age instantly.
+5. **Step 3 (Target Age & Shift)**: Enter or slide how many years to transform (e.g. +10 for future or -10 for past), then click **Transform Face Now**.
+6. **Step 4 (Results)**: View your transformed face with the **Interactive Before & After slider** or inspect the side-by-side comparison poster. Download results with one click.
+
+### Option B: Desktop Tkinter GUI Launcher
 
 1. Ensure the Conda environment and repository dependencies are installed.
 2. Confirm the model files exist at the configured paths.
