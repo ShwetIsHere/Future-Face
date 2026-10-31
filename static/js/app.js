@@ -473,8 +473,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnConfirmSnapshot = document.getElementById('btnConfirmSnapshot');
 
     async function startWebcam() {
+      if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        showToast('Live camera requires HTTPS or a domain name for browser security. Please upload a photo or connect your domain with SSL.');
+        return;
+      }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showToast('Camera access is not supported by your browser or environment.');
+        showToast('Camera access is not supported by your browser or environment. Please upload a photo.');
         return;
       }
       try {

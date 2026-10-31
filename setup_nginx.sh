@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "[1/4] Fixing directory permissions for Nginx..."
+echo "[1/4] Fixing directory permissions for Nginx and installing vector fonts..."
+sudo apt-get update -qq && sudo apt-get install -y fonts-dejavu-core -qq
 chmod o+rx /home/Shwet_Patel
 chmod o+rx /home/Shwet_Patel/Future-Face
 chmod -R o+rX /home/Shwet_Patel/Future-Face/static
