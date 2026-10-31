@@ -22,7 +22,11 @@
     
     <!-- Feedback Form Card -->
     <div class="feedback-form-card card">
-      <form id="standaloneFeedbackForm" class="standalone-feedback-form">
+      <form id="form" class="standalone-feedback-form" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="82725bd8-bd34-4109-b8d1-8df7cc07337b">
+        <input type="hidden" name="subject" value="New FutureFace Feedback">
+        <input type="hidden" name="from_name" value="FutureFace User Feedback">
+        <input type="hidden" name="rating" id="feedbackRatingInput" value="5 Stars — Excellent experience!">
         
         <!-- Name -->
         <div class="form-group">
@@ -30,7 +34,7 @@
             <span>Your Name</span>
             <span class="required-mark">*</span>
           </label>
-          <input type="text" id="feedbackName" class="form-input" placeholder="e.g. Alex Johnson" required autocomplete="name">
+          <input type="text" id="feedbackName" name="name" class="form-input" placeholder="e.g. Alex Johnson" required autocomplete="name">
         </div>
 
         <!-- Email -->
@@ -39,7 +43,7 @@
             <span>Your Email</span>
             <span class="required-mark">*</span>
           </label>
-          <input type="email" id="feedbackEmail" class="form-input" placeholder="e.g. alex@example.com" required autocomplete="email">
+          <input type="email" id="feedbackEmail" name="email" class="form-input" placeholder="e.g. alex@example.com" required autocomplete="email">
         </div>
 
         <!-- Star Rating -->
@@ -61,7 +65,7 @@
             <span>Feedback / Suggestions</span>
             <span class="required-mark">*</span>
           </label>
-          <textarea id="feedbackMessage" class="form-textarea" rows="5" placeholder="Share your thoughts, feature requests, or any issues you encountered..." required></textarea>
+          <textarea id="feedbackMessage" name="message" class="form-textarea" rows="5" placeholder="Share your thoughts, feature requests, or any issues you encountered..." required></textarea>
         </div>
 
         <!-- Submit Button -->

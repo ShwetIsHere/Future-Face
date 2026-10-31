@@ -208,9 +208,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   // 6. STANDALONE FEEDBACK PAGE FORM
   // ============================================================
-  const standaloneFeedbackForm = document.getElementById('standaloneFeedbackForm');
+  // 6. STANDALONE FEEDBACK PAGE FORM (Web3Forms)
+  // ============================================================
+  const form = document.getElementById('form') || document.getElementById('standaloneFeedbackForm');
   const feedbackStarRating = document.getElementById('feedbackStarRating');
   const ratingLabelHint = document.getElementById('ratingLabelHint');
+  const feedbackRatingInput = document.getElementById('feedbackRatingInput');
   const feedbackSuccessState = document.getElementById('feedbackSuccessState');
   let userFeedbackRating = 5;
 
@@ -227,6 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
     stars.forEach(star => {
       star.addEventListener('click', () => {
         userFeedbackRating = parseInt(star.dataset.rating, 10);
+        if (feedbackRatingInput) {
+          feedbackRatingInput.value = `${userFeedbackRating} Stars — ${ratingHints[userFeedbackRating] || ''}`;
+        }
         stars.forEach(s => {
           const r = parseInt(s.dataset.rating, 10);
           if (r <= userFeedbackRating) {
@@ -242,41 +248,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (standaloneFeedbackForm) {
-    standaloneFeedbackForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const nameInput = document.getElementById('feedbackName');
-      const emailInput = document.getElementById('feedbackEmail');
-      const messageInput = document.getElementById('feedbackMessage');
+  if (form) {
+    const submitBtn = form.querySelector('button[type="submit"]');
 
-      const name = nameInput ? nameInput.value.trim() : '';
-      const email = emailInput ? emailInput.value.trim() : '';
-      const feedback = messageInput ? messageInput.value.trim() : '';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      formData.append("access_key", "82725bd8-bd34-4109-b8d1-8df7cc07337b");
+      formData.set("rating", `${userFeedbackRating} Stars — ${ratingHints[userFeedbackRating] || ''}`);
+
+      const originalBtnContent = submitBtn ? submitBtn.innerHTML : 'Submit Feedback';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>Sending...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
+      }
 
       try {
-        const res = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: name,
-            email: email,
-            rating: userFeedbackRating,
-            feedback: feedback
-          })
+        const response = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          body: formData
         });
 
-        const data = await res.json();
-        if (res.ok && data.success) {
-          standaloneFeedbackForm.classList.add('hidden');
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          form.classList.add('hidden');
           if (feedbackSuccessState) feedbackSuccessState.classList.remove('hidden');
-          showToast('Thank you for your feedback!', false);
+          if (typeof showToast === 'function') {
+            showToast("Success! Your message has been sent.", false);
+          } else {
+            alert("Success! Your message has been sent.");
+          }
+          form.reset();
         } else {
-          showToast(data.error || 'Failed to submit feedback.');
+          const errMsg = data.message || "Failed to submit feedback.";
+          if (typeof showToast === 'function') {
+            showToast("Error: " + errMsg, true);
+          } else {
+            alert("Error: " + errMsg);
+          }
         }
-      } catch (err) {
-        standaloneFeedbackForm.classList.add('hidden');
-        if (feedbackSuccessState) feedbackSuccessState.classList.remove('hidden');
-        showToast('Feedback submitted. Thank you!', false);
+      } catch (error) {
+        console.error("Web3Forms submission error:", error);
+        if (typeof showToast === 'function') {
+          showToast("Something went wrong. Please try again.", true);
+        } else {
+          alert("Something went wrong. Please try again.");
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.innerHTML = originalBtnContent;
+          submitBtn.disabled = false;
+        }
       }
     });
   }
