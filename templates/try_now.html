@@ -286,25 +286,91 @@
   </div>
 </section>
 
-<!-- GENERATING PROGRESS OVERLAY -->
+<!-- GENERATING REAL-TIME AI SCANNER & LIVE TIMER OVERLAY -->
 <div class="progress-overlay hidden" id="progressOverlay">
-  <div class="progress-box">
-    <div class="radar-scanner">
-      <div class="radar-sweep"></div>
-      <div class="scanner-face-icon">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M8 15h8"></path>
-          <line x1="9" y1="9" x2="9.01" y2="9"></line>
-          <line x1="15" y1="9" x2="15.01" y2="9"></line>
-        </svg>
+  <div class="progress-box enhanced-scanner-modal">
+
+    <!-- Top Status Bar & Estimated Duration Notice -->
+    <div class="modal-top-status-bar">
+      <div class="scanner-top-status">
+        <span class="status-pulse-dot"></span>
+        <span id="scannerStatusBadge">AI Neural Aging Engine Active</span>
+      </div>
+      <div class="estimated-duration-pill">
+        <span class="est-icon">⏱️</span>
+        <span>Estimated Time: <strong>30–40 seconds</strong></span>
       </div>
     </div>
-    <h3 id="progressTitle">Synthesizing Age Progression...</h3>
-    <p id="progressSubtitle">SAM StyleGAN2 model is generating facial age changes. This takes ~10–20 seconds on GPU.</p>
-    <div class="progress-bar-track">
-      <div class="progress-bar-fill"></div>
+
+    <!-- Live Biometric Face Viewport with Real-Time Canvas Pixel Manipulation -->
+    <div class="face-scanner-viewport" id="scannerViewport">
+      <!-- High-Performance Real-Time Procedural Pixel Canvas -->
+      <canvas id="scannerLiveCanvas" width="240" height="240" class="scanner-live-canvas"></canvas>
+
+      <!-- Target Portrait Face Image (Backup / offscreen source) -->
+      <img id="scannerFaceImg" class="scanner-face-photo hidden" alt="Processing Face" src="/demo/person1.jpg">
+      
+      <!-- High-tech laser sweep bar -->
+      <div class="scanner-laser-beam"></div>
+
+      <!-- Facial Landmark Tracking Mesh -->
+      <div class="neural-landmark-grid">
+        <span class="landmark-dot dot-eye-left"></span>
+        <span class="landmark-dot dot-eye-right"></span>
+        <span class="landmark-dot dot-nose"></span>
+        <span class="landmark-dot dot-mouth-left"></span>
+        <span class="landmark-dot dot-mouth-right"></span>
+        <span class="landmark-dot dot-chin"></span>
+        <svg class="landmark-wireframe" viewBox="0 0 200 200">
+          <polygon points="65,75 135,75 100,110" fill="none" stroke="rgba(56, 189, 248, 0.45)" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <polygon points="100,110 75,145 125,145" fill="none" stroke="rgba(56, 189, 248, 0.45)" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <polygon points="75,145 100,175 125,145" fill="none" stroke="rgba(56, 189, 248, 0.45)" stroke-width="1.5" stroke-dasharray="3,3"/>
+        </svg>
+      </div>
+
+      <!-- Corner HUD Brackets -->
+      <div class="hud-corner hud-top-left"></div>
+      <div class="hud-corner hud-top-right"></div>
+      <div class="hud-corner hud-bottom-left"></div>
+      <div class="hud-corner hud-bottom-right"></div>
+
+      <!-- HUD Telemetry Labels -->
+      <div class="hud-telemetry hud-tl">LATENT W+</div>
+      <div class="hud-telemetry hud-tr" id="hudTargetAge">TARGET: 60Y</div>
+      <div class="hud-telemetry hud-bl" id="hudShiftYears">SHIFT: +40Y</div>
+      <div class="hud-telemetry hud-br">SAM 1024²</div>
     </div>
+
+    <!-- Active Stage Title & Real-time explanation -->
+    <div class="scanner-text-group">
+      <h3 id="progressTitle">Inverting Face into Latent Space...</h3>
+      <p id="progressSubtitle">SAM StyleGAN2 model is generating facial age changes in GPU memory.</p>
+    </div>
+
+    <!-- Progress Bar with Percentage and Stage -->
+    <div class="progress-bar-container">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="scannerProgressFill" style="width: 20%;"></div>
+      </div>
+      <div class="progress-meta-row">
+        <span id="scannerStepLabel">Stage 1 of 4</span>
+        <span id="scannerPercentLabel">20%</span>
+      </div>
+    </div>
+
+    <!-- Real-Time Stopwatch Timer (Under that run timer) -->
+    <div class="live-stopwatch-container">
+      <div class="stopwatch-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>REALTIME INFERENCE TIMER</span>
+      </div>
+      <div class="stopwatch-counter" id="liveTimerDisplay">00:00.00</div>
+      <div class="stopwatch-footnote">Estimated processing time: ~30–40 seconds • NVIDIA RTX 3060 Laptop GPU</div>
+    </div>
+
   </div>
 </div>
 {% endblock %}

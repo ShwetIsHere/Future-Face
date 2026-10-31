@@ -524,20 +524,244 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Estimate Age API Call
+    // Enhanced Biometric Scanner & Real-Time Stopwatch Elements
     const progressOverlay = document.getElementById('progressOverlay');
     const progressTitle = document.getElementById('progressTitle');
     const progressSubtitle = document.getElementById('progressSubtitle');
+    const scannerFaceImg = document.getElementById('scannerFaceImg');
+    const scannerLiveCanvas = document.getElementById('scannerLiveCanvas');
+    const scannerStatusBadge = document.getElementById('scannerStatusBadge');
+    const hudTargetAge = document.getElementById('hudTargetAge');
+    const hudShiftYears = document.getElementById('hudShiftYears');
+    const scannerProgressFill = document.getElementById('scannerProgressFill');
+    const scannerStepLabel = document.getElementById('scannerStepLabel');
+    const scannerPercentLabel = document.getElementById('scannerPercentLabel');
+    const liveTimerDisplay = document.getElementById('liveTimerDisplay');
+
     const croppedFaceImg = document.getElementById('croppedFaceImg');
     const thumbPlaceholder = document.getElementById('thumbPlaceholder');
     const displayEstimatedAge = document.getElementById('displayEstimatedAge');
 
-    async function estimateAgeFromDataUrl(dataUrl) {
-      if (progressOverlay) {
-        if (progressTitle) progressTitle.textContent = 'Detecting Face & Estimating Age...';
-        if (progressSubtitle) progressSubtitle.textContent = 'YuNet Face Detection & ResNet-50 Age Regression running in-memory.';
-        progressOverlay.classList.remove('hidden');
+    let isGenerating = false;
+    let liveTimerInterval = null;
+    let liveTimerStart = 0;
+    let stageIntervals = [];
+    let livePixelAnimId = null;
+
+    // Prevent page reload / navigation while image transformation is active
+    window.addEventListener('beforeunload', (e) => {
+      if (isGenerating) {
+        e.preventDefault();
+        e.returnValue = 'Facial age transformation is currently in progress. Reloading will cancel the generation.';
+        return e.returnValue;
       }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (isGenerating && (e.key === 'F5' || (e.ctrlKey && (e.key === 'r' || e.key === 'R')))) {
+        e.preventDefault();
+        showToast('⚠️ Image generation is in progress. Please wait ~30-40 seconds before reloading.');
+      }
+    });
+
+    function startLiveStopwatch() {
+      liveTimerStart = performance.now();
+      if (liveTimerDisplay) liveTimerDisplay.textContent = '00:00.00';
+      if (liveTimerInterval) clearInterval(liveTimerInterval);
+      liveTimerInterval = setInterval(() => {
+        const elapsed = performance.now() - liveTimerStart;
+        const totalSec = Math.floor(elapsed / 1000);
+        const ms = Math.floor((elapsed % 1000) / 10);
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+        const formatted = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+        if (liveTimerDisplay) liveTimerDisplay.textContent = formatted;
+      }, 25);
+    }
+
+    function stopLiveStopwatch() {
+      if (liveTimerInterval) {
+        clearInterval(liveTimerInterval);
+        liveTimerInterval = null;
+      }
+      stageIntervals.forEach(t => clearTimeout(t));
+      stageIntervals = [];
+    }
+
+    // Real-Time Procedural Pixel Transformation Engine
+    function startLivePixelSimulation(imageSrc, shift, targetAgeVal) {
+      if (!scannerLiveCanvas) return;
+      const ctx = scannerLiveCanvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+
+      const w = scannerLiveCanvas.width;
+      const h = scannerLiveCanvas.height;
+
+      const sourceImg = new Image();
+      sourceImg.crossOrigin = 'anonymous';
+
+      sourceImg.onload = () => {
+        // Draw base face centered and scaled onto an offscreen canvas
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = w;
+        offCanvas.height = h;
+        const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+
+        const scale = Math.max(w / sourceImg.width, h / sourceImg.height);
+        const sw = sourceImg.width * scale;
+        const sh = sourceImg.height * scale;
+        const ox = (w - sw) / 2;
+        const oy = (h - sh) / 2;
+        offCtx.drawImage(sourceImg, ox, oy, sw, sh);
+
+        const baseData = offCtx.getImageData(0, 0, w, h);
+        const workData = ctx.createImageData(w, h);
+
+        const startTime = performance.now();
+        const isAging = shift >= 0;
+
+        function renderFrame(now) {
+          const elapsed = (now - startTime) / 1000;
+
+          // Copy base pixels to workData
+          workData.data.set(baseData.data);
+          const pixels = workData.data;
+
+          // 1. Scan Line Laser position (sweeping top to bottom)
+          const sweepPeriod = 2.4;
+          const sweepProgress = (elapsed % sweepPeriod) / sweepPeriod;
+          const scanY = Math.floor(sweepProgress * h);
+
+          // Morph progress accumulates smoothly over ~30 seconds
+          const morphProgress = Math.min(elapsed / 30.0, 1.0);
+
+          // Procedural pixel transformation loop
+          for (let y = 0; y < h; y++) {
+            const dyFromScan = Math.abs(y - scanY);
+            const nearScan = dyFromScan < 16;
+            const scanFactor = nearScan ? (1 - dyFromScan / 16) : 0;
+
+            for (let x = 0; x < w; x++) {
+              const idx = (y * w + x) * 4;
+              let r = pixels[idx];
+              let g = pixels[idx + 1];
+              let b = pixels[idx + 2];
+
+              // Phase 1: Highlighting edge gradients near laser sweep (landmark detection)
+              if (scanFactor > 0) {
+                const leftIdx = idx - 4;
+                const upIdx = idx - w * 4;
+                if (leftIdx >= 0 && upIdx >= 0) {
+                  const lumDiff = Math.abs((r + g + b) - (pixels[leftIdx] + pixels[leftIdx + 1] + pixels[leftIdx + 2])) / 3;
+                  if (lumDiff > 8) {
+                    r = Math.min(255, r * (1 - scanFactor * 0.6) + 56 * scanFactor * 0.9);
+                    g = Math.min(255, g * (1 - scanFactor * 0.6) + 189 * scanFactor * 0.9);
+                    b = Math.min(255, b * (1 - scanFactor * 0.6) + 248 * scanFactor * 0.9);
+                  }
+                }
+              }
+
+              // Phase 2: Live Procedural Aging or Rejuvenation Pixel Alterations
+              if (elapsed > 2.5) {
+                if (isAging) {
+                  // Forehead horizontal age wrinkles
+                  if (y >= 45 && y <= 85 && x >= 55 && x <= 185) {
+                    const crease = Math.sin(y * 0.42 + Math.cos(x * 0.05)) * Math.sin(x * 0.1);
+                    if (crease > 0.45) {
+                      const darken = (crease - 0.45) * morphProgress * 0.42;
+                      r = Math.max(0, r * (1 - darken));
+                      g = Math.max(0, g * (1 - darken * 1.05));
+                      b = Math.max(0, b * (1 - darken * 1.1));
+                    }
+                  }
+
+                  // Nasolabial folds (smile lines deepening)
+                  const dLeftFold = Math.abs((x - 75) + 0.6 * (y - 170));
+                  const dRightFold = Math.abs((x - 165) - 0.6 * (y - 170));
+                  if (y >= 125 && y <= 180 && (dLeftFold < 10 || dRightFold < 10)) {
+                    const foldDist = Math.min(dLeftFold, dRightFold);
+                    const foldFactor = (1 - foldDist / 10) * morphProgress * 0.35;
+                    r = Math.max(0, r * (1 - foldFactor));
+                    g = Math.max(0, g * (1 - foldFactor * 1.08));
+                    b = Math.max(0, b * (1 - foldFactor * 1.15));
+                  }
+
+                  // Eye corner crows' feet
+                  const leftCornerDist = Math.hypot(x - 60, y - 100);
+                  const rightCornerDist = Math.hypot(x - 180, y - 100);
+                  if (leftCornerDist < 24 || rightCornerDist < 24) {
+                    const angle = Math.atan2(y - 100, (leftCornerDist < 24 ? x - 60 : x - 180));
+                    const crowWave = Math.sin(angle * 7);
+                    if (crowWave > 0.4) {
+                      const crowDarken = (crowWave - 0.4) * morphProgress * 0.3;
+                      r = Math.max(0, r * (1 - crowDarken));
+                      g = Math.max(0, g * (1 - crowDarken));
+                      b = Math.max(0, b * (1 - crowDarken));
+                    }
+                  }
+
+                  // Temple & hair graying / desaturation
+                  if ((y < 55 || x < 50 || x > 190) && (r + g + b) < 320) {
+                    const gray = (r * 0.3 + g * 0.59 + b * 0.11);
+                    const silverProgress = morphProgress * 0.55;
+                    r = r * (1 - silverProgress) + (gray + 45) * silverProgress;
+                    g = g * (1 - silverProgress) + (gray + 45) * silverProgress;
+                    b = b * (1 - silverProgress) + (gray + 50) * silverProgress;
+                  }
+
+                  // Mature skin texture micro-contrast
+                  if (y > 70 && y < 195 && x > 55 && x < 185) {
+                    const grain = ((x * 13 + y * 37) % 7) - 3;
+                    const grainAmp = morphProgress * 0.04;
+                    r = Math.min(255, Math.max(0, r + grain * grainAmp * r));
+                    g = Math.min(255, Math.max(0, g + grain * grainAmp * g));
+                    b = Math.min(255, Math.max(0, g + grain * grainAmp * b));
+                  }
+
+                } else {
+                  // Youth Regression (smoothing, fine line reduction, youthful glow)
+                  if (y > 45 && y < 200 && x > 50 && x < 190) {
+                    const peachGlow = morphProgress * 0.18;
+                    r = Math.min(255, r * (1 - peachGlow * 0.1) + 245 * peachGlow * 0.15);
+                    g = Math.min(255, g * (1 - peachGlow * 0.1) + 210 * peachGlow * 0.12);
+                    b = Math.min(255, b * (1 - peachGlow * 0.1) + 195 * peachGlow * 0.1);
+                  }
+                }
+              }
+
+              pixels[idx] = r;
+              pixels[idx + 1] = g;
+              pixels[idx + 2] = b;
+            }
+          }
+
+          ctx.putImageData(workData, 0, 0);
+
+          livePixelAnimId = requestAnimationFrame(renderFrame);
+        }
+
+        livePixelAnimId = requestAnimationFrame(renderFrame);
+      };
+
+      sourceImg.src = imageSrc;
+    }
+
+    function stopLivePixelSimulation() {
+      if (livePixelAnimId) {
+        cancelAnimationFrame(livePixelAnimId);
+        livePixelAnimId = null;
+      }
+    }
+
+    // Age estimation runs non-intrusively in background without loading modal
+    async function estimateAgeFromDataUrl(dataUrl) {
+      if (displayEstimatedAge) {
+        displayEstimatedAge.innerHTML = '<span class="estimating-pulse">Estimating...</span>';
+      }
+      const currentAgeHint = document.getElementById('currentAgeHint');
+      safeSetText(currentAgeHint, '(AI estimating facial age...)');
+      if (yearsSlider) yearsSlider.setAttribute('disabled', 'true');
+      if (btnExecuteTransform) btnExecuteTransform.setAttribute('disabled', 'true');
 
       try {
         const res = await fetch('/api/estimate-age', {
@@ -555,11 +779,13 @@ document.addEventListener('DOMContentLoaded', () => {
         currentEstimatedAge = parseFloat(data.estimated_age);
 
         safeSetText(displayEstimatedAge, Math.round(currentEstimatedAge));
-        const currentAgeHint = document.getElementById('currentAgeHint');
         safeSetText(currentAgeHint, '(AI Estimated via ResNet-50)');
 
         if (yearsSlider) {
           yearsSlider.removeAttribute('disabled');
+        }
+        if (btnExecuteTransform) {
+          btnExecuteTransform.removeAttribute('disabled');
         }
 
         const faceDataUrl = data.cropped_image || data.cropped_url;
@@ -574,9 +800,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       } catch (err) {
         console.error(err);
+        safeSetText(displayEstimatedAge, '--');
+        safeSetText(currentAgeHint, '(Upload or capture photo to estimate)');
         showToast(err.message || 'Error estimating age. Please choose another photo.');
-      } finally {
-        if (progressOverlay) progressOverlay.classList.add('hidden');
       }
     }
 
@@ -737,10 +963,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateStepProgress(3);
 
+        const previewSrc = (croppedFaceImg && !croppedFaceImg.classList.contains('hidden') && croppedFaceImg.src) || (uploadPreviewImg && uploadPreviewImg.src) || capturedDataUrl || '/demo/person1.jpg';
+
+        // Lock reload while photo is generating
+        isGenerating = true;
+
         if (progressOverlay) {
-          if (progressTitle) progressTitle.textContent = `Synthesizing Age Progression (${shift >= 0 ? '+' : ''}${shift} yrs)...`;
-          if (progressSubtitle) progressSubtitle.textContent = 'SAM StyleGAN2 model is generating high-fidelity facial aging in GPU memory.';
+          if (scannerFaceImg) {
+            scannerFaceImg.src = previewSrc;
+          }
+
+          safeSetText(hudTargetAge, `TARGET: ${targetAge}Y`);
+          safeSetText(hudShiftYears, `SHIFT: ${shift >= 0 ? '+' : ''}${shift}Y`);
+          safeSetText(scannerStatusBadge, 'AI Neural Aging Engine Active');
+
+          if (scannerProgressFill) scannerProgressFill.style.width = '16%';
+          safeSetText(scannerStepLabel, 'Stage 1 of 4');
+          safeSetText(scannerPercentLabel, '16%');
+          safeSetText(progressTitle, 'Inverting Face into StyleGAN2 Latent Space (w+)...');
+          safeSetText(progressSubtitle, 'Estimated processing time: ~30–40 seconds. YuNet mapping 68 biometric landmark points & extracting identity-preserving embeddings.');
+
+          startLiveStopwatch();
+          startLivePixelSimulation(previewSrc, shift, targetAge);
           progressOverlay.classList.remove('hidden');
+
+          // Stage 2 schedule (7.5s)
+          stageIntervals.push(setTimeout(() => {
+            if (scannerProgressFill) scannerProgressFill.style.width = '45%';
+            safeSetText(scannerStepLabel, 'Stage 2 of 4');
+            safeSetText(scannerPercentLabel, '45%');
+            safeSetText(progressTitle, `Traversing Age Latent Trajectory (${shift >= 0 ? '+' : ''}${shift} yrs)...`);
+            safeSetText(progressSubtitle, `SAM model navigating continuous age direction vector towards target age ${targetAge} in GPU memory.`);
+          }, 7500));
+
+          // Stage 3 schedule (18s)
+          stageIntervals.push(setTimeout(() => {
+            if (scannerProgressFill) scannerProgressFill.style.width = '74%';
+            safeSetText(scannerStepLabel, 'Stage 3 of 4');
+            safeSetText(scannerPercentLabel, '74%');
+            safeSetText(progressTitle, 'Synthesizing Facial Geometry & Structural Aging...');
+            safeSetText(progressSubtitle, 'Modulating intermediate AdaIN style layers: skin texture, hairline, wrinkles, and facial contours.');
+          }, 18000));
+
+          // Stage 4 schedule (28s)
+          stageIntervals.push(setTimeout(() => {
+            if (scannerProgressFill) scannerProgressFill.style.width = '92%';
+            safeSetText(scannerStepLabel, 'Stage 4 of 4');
+            safeSetText(scannerPercentLabel, '92%');
+            safeSetText(progressTitle, 'Finalizing Watermarked High-Res Output...');
+            safeSetText(progressSubtitle, 'Embedding FutureFace authenticity watermark and rendering dual comparison views.');
+          }, 28000));
         }
 
         try {
@@ -757,6 +1029,25 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!res.ok || !data.success) {
             throw new Error(data.error || 'Transformation failed.');
           }
+
+          isGenerating = false;
+          stopLivePixelSimulation();
+          stopLiveStopwatch();
+          const finalDuration = ((performance.now() - liveTimerStart) / 1000).toFixed(2);
+          const totalSec = Math.floor(finalDuration);
+          const ms = Math.floor((finalDuration % 1) * 100);
+          if (liveTimerDisplay) {
+            liveTimerDisplay.textContent = `00:${String(totalSec).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+          }
+
+          if (scannerProgressFill) scannerProgressFill.style.width = '100%';
+          safeSetText(scannerStepLabel, 'Stage 4 of 4');
+          safeSetText(scannerPercentLabel, '100%');
+          safeSetText(progressTitle, 'Age Transformation Complete!');
+          safeSetText(progressSubtitle, `Synthesized successfully in ${finalDuration}s on NVIDIA RTX 3060 GPU.`);
+
+          // Brief delay so user sees completion & stopwatch result
+          await new Promise(r => setTimeout(r, 450));
 
           const origAgeRounded = Math.round(data.estimated_age);
           const finalTargetAge = Math.round(data.target_age);
@@ -792,13 +1083,19 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           updateStepProgress(4);
-          showToast('Transformation completed successfully!', false);
+          showToast(`Transformation completed in ${finalDuration}s!`, false);
 
         } catch (err) {
+          isGenerating = false;
+          stopLivePixelSimulation();
+          stopLiveStopwatch();
           console.error(err);
           showToast(err.message || 'Error generating future face.');
           updateStepProgress(2);
         } finally {
+          isGenerating = false;
+          stopLivePixelSimulation();
+          stopLiveStopwatch();
           if (progressOverlay) progressOverlay.classList.add('hidden');
         }
       });
