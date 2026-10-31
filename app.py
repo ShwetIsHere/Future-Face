@@ -361,13 +361,24 @@ def api_estimate_age():
         if image_bgr is None:
             return jsonify({"success": False, "error": "Invalid or corrupted image format."}), 400
 
-        pil_face, error_msg, val_res = detect_and_crop_face(image_bgr)
-        if error_msg:
-            return jsonify({
-                "success": False,
-                "error": error_msg,
-                "validation": val_res.to_dict() if val_res else None
-            }), 422
+        is_pre_cropped = False
+        if request.is_json:
+            is_pre_cropped = bool(request.json.get("skip_autocrop") or request.json.get("is_cropped"))
+
+        if is_pre_cropped:
+            crop_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+            pil_face = Image.fromarray(crop_rgb)
+            if pil_face.width > 1024 or pil_face.height > 1024:
+                pil_face = pil_face.resize((1024, 1024), Image.Resampling.LANCZOS)
+            val_res = None
+        else:
+            pil_face, error_msg, val_res = detect_and_crop_face(image_bgr)
+            if error_msg:
+                return jsonify({
+                    "success": False,
+                    "error": error_msg,
+                    "validation": val_res.to_dict() if val_res else None
+                }), 422
 
         predicted_age = estimate_age(pil_face)
 
@@ -384,6 +395,7 @@ def api_estimate_age():
         }
 
         cropped_data_url = f"data:image/jpeg;base64,{base64.b64encode(face_bytes).decode('utf-8')}"
+        face_bbox = val_res.face_bbox if val_res else None
 
         return jsonify({
             "success": True,
@@ -391,7 +403,8 @@ def api_estimate_age():
             "estimated_age": round(predicted_age, 1),
             "cropped_url": cropped_data_url,
             "cropped_image": cropped_data_url,
-            "validation": val_res.to_dict() if val_res else None
+            "validation": val_res.to_dict() if val_res else None,
+            "face_bbox": face_bbox
         })
 
     except Exception as exc:

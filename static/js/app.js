@@ -405,6 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target.result;
+        currentOriginalDataUrl = dataUrl;
         if (uploadPreviewImg) uploadPreviewImg.src = dataUrl;
         if (dropzoneContent) dropzoneContent.classList.add('hidden');
         if (dropzonePreview) dropzonePreview.classList.remove('hidden');
@@ -474,6 +475,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (webcamVideo) {
           webcamVideo.srcObject = webcamStream;
+          webcamVideo.onloadedmetadata = () => {
+            if (webcamVideo.videoWidth && webcamVideo.videoHeight && cameraViewport) {
+              cameraViewport.style.aspectRatio = `${webcamVideo.videoWidth} / ${webcamVideo.videoHeight}`;
+            }
+          };
           await webcamVideo.play();
         }
         if (cameraViewport) cameraViewport.className = 'camera-viewport state-streaming';
@@ -492,7 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
         webcamStream = null;
       }
       if (webcamVideo) webcamVideo.srcObject = null;
-      if (cameraViewport) cameraViewport.className = 'camera-viewport state-off';
+      if (cameraViewport) {
+        cameraViewport.className = 'camera-viewport state-off';
+        cameraViewport.style.aspectRatio = '4 / 3';
+      }
       if (cameraActiveControls) cameraActiveControls.classList.add('hidden');
       if (snapshotActions) snapshotActions.classList.add('hidden');
     }
@@ -513,7 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.drawImage(webcamVideo, 0, 0, w, h);
 
         capturedDataUrl = snapshotCanvas.toDataURL('image/jpeg', 0.95);
-        if (cameraSnapshotPreview) cameraSnapshotPreview.src = capturedDataUrl;
+        currentOriginalDataUrl = capturedDataUrl;
+        if (cameraSnapshotPreview) {
+          cameraSnapshotPreview.src = capturedDataUrl;
+          if (cameraViewport && w && h) {
+            cameraViewport.style.aspectRatio = `${w} / ${h}`;
+          }
+        }
 
         if (cameraViewport) cameraViewport.className = 'camera-viewport state-captured';
         if (cameraActiveControls) cameraActiveControls.classList.add('hidden');
@@ -800,8 +815,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    let currentOriginalDataUrl = null;
+    let lastDetectedFaceBbox = null;
+
     // Age estimation runs non-intrusively in background without loading modal
-    async function estimateAgeFromDataUrl(dataUrl) {
+    async function estimateAgeFromDataUrl(dataUrl, isCropped = false) {
+      if (!isCropped) {
+        currentOriginalDataUrl = dataUrl;
+      }
       if (displayEstimatedAge) {
         displayEstimatedAge.innerHTML = '<span class="estimating-pulse">Estimating...</span>';
       }
@@ -811,10 +832,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnExecuteTransform) btnExecuteTransform.setAttribute('disabled', 'true');
 
       try {
+        const payload = { image_data: dataUrl };
+        if (isCropped) {
+          payload.is_cropped = true;
+          payload.skip_autocrop = true;
+        }
         const res = await fetch('/api/estimate-age', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image_data: dataUrl })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -824,9 +850,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentSessionId = data.session_id;
         currentEstimatedAge = parseFloat(data.estimated_age);
+        if (data.face_bbox) {
+          lastDetectedFaceBbox = data.face_bbox;
+        }
 
         safeSetText(displayEstimatedAge, Math.round(currentEstimatedAge));
-        safeSetText(currentAgeHint, '(AI Estimated via ResNet-50)');
+        safeSetText(currentAgeHint, isCropped ? '(Custom Safezone Applied)' : '(AI Estimated via ResNet-50)');
 
         if (yearsSlider) {
           yearsSlider.removeAttribute('disabled');
@@ -842,6 +871,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (thumbPlaceholder) thumbPlaceholder.classList.add('hidden');
 
+        // Reveal Safezone action buttons
+        const btnEditSafezoneUpload = document.getElementById('btnEditSafezoneUpload');
+        const btnEditSafezoneCamera = document.getElementById('btnEditSafezoneCamera');
+        const btnEditSafezonePill = document.getElementById('btnEditSafezonePill');
+        if (btnEditSafezoneUpload) btnEditSafezoneUpload.classList.remove('hidden');
+        if (btnEditSafezoneCamera) btnEditSafezoneCamera.classList.remove('hidden');
+        if (btnEditSafezonePill) btnEditSafezonePill.classList.remove('hidden');
+
         setupTargetAgeControls(currentEstimatedAge);
         updateStepProgress(2);
 
@@ -850,10 +887,6 @@ document.addEventListener('DOMContentLoaded', () => {
         safeSetText(displayEstimatedAge, '--');
         safeSetText(currentAgeHint, '(Upload or capture photo to estimate)');
         showToast(err.message || 'Error estimating age. Please choose another photo.');
-        const msg = String(err.message || '').toLowerCase();
-        if (msg.includes('angle') || msg.includes('tilted') || msg.includes('blurry') || msg.includes('small') || msg.includes('face')) {
-          setTimeout(openFaceGuide, 1200);
-        }
       }
     }
 
@@ -1209,10 +1242,277 @@ document.addEventListener('DOMContentLoaded', () => {
         if (presetChipsContainer) {
           presetChipsContainer.innerHTML = '<span class="no-presets-hint">Upload or capture a photo to unlock age shift presets</span>';
         }
+        if (btnEditSafezoneUpload) btnEditSafezoneUpload.classList.add('hidden');
+        if (btnEditSafezoneCamera) btnEditSafezoneCamera.classList.add('hidden');
+        if (btnEditSafezonePill) btnEditSafezonePill.classList.add('hidden');
         stopWebcam();
         updateStepProgress(1);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
+    }
+
+    // =========================================================================
+    // SAFEZONE CROP EDITOR MODAL (Interactive 3x3 Grid Crop)
+    // =========================================================================
+    const safezoneModal = document.getElementById('safezoneModal');
+    const safezoneSourceImg = document.getElementById('safezoneSourceImg');
+    const safezoneCropBox = document.getElementById('safezoneCropBox');
+    const btnCloseSafezoneModal = document.getElementById('btnCloseSafezoneModal');
+    const btnCancelSafezone = document.getElementById('btnCancelSafezone');
+    const btnResetSafezone = document.getElementById('btnResetSafezone');
+    const btnApplySafezone = document.getElementById('btnApplySafezone');
+    const btnEditSafezoneUpload = document.getElementById('btnEditSafezoneUpload');
+    const btnEditSafezoneCamera = document.getElementById('btnEditSafezoneCamera');
+    const btnEditSafezonePill = document.getElementById('btnEditSafezonePill');
+
+    let cropState = {
+      x: 0,
+      y: 0,
+      size: 100,
+      isDragging: false,
+      isResizing: false,
+      resizeDir: null,
+      startX: 0,
+      startY: 0,
+      startBoxX: 0,
+      startBoxY: 0,
+      startBoxSize: 0,
+      stageWidth: 0,
+      stageHeight: 0
+    };
+
+    function updateCropBoxDOM() {
+      if (!safezoneCropBox) return;
+      safezoneCropBox.style.left = `${cropState.x}px`;
+      safezoneCropBox.style.top = `${cropState.y}px`;
+      safezoneCropBox.style.width = `${cropState.size}px`;
+      safezoneCropBox.style.height = `${cropState.size}px`;
+    }
+
+    function initAutoSafezone() {
+      if (!safezoneSourceImg || !safezoneSourceImg.width || !safezoneSourceImg.height) return;
+      const dispW = safezoneSourceImg.width;
+      const dispH = safezoneSourceImg.height;
+      cropState.stageWidth = dispW;
+      cropState.stageHeight = dispH;
+
+      const natW = safezoneSourceImg.naturalWidth || dispW;
+      const natH = safezoneSourceImg.naturalHeight || dispH;
+      const scaleX = dispW / natW;
+      const scaleY = dispH / natH;
+
+      if (lastDetectedFaceBbox && lastDetectedFaceBbox.length === 4) {
+        const [fx, fy, fw, fh] = lastDetectedFaceBbox;
+        // 1.48x max(fw, fh) matching exact red box reference
+        const faceSizeNat = Math.max(fw, fh);
+        const sideNat = Math.round(faceSizeNat * 1.48);
+        const cxNat = fx + fw / 2;
+        const cyNat = fy + fh * 0.45;
+
+        let size = Math.round(sideNat * Math.min(scaleX, scaleY));
+        size = Math.max(60, Math.min(size, dispW, dispH));
+
+        let x = Math.round(cxNat * scaleX - size / 2);
+        let y = Math.round(cyNat * scaleY - size / 2);
+
+        x = Math.max(0, Math.min(dispW - size, x));
+        y = Math.max(0, Math.min(dispH - size, y));
+
+        cropState.x = x;
+        cropState.y = y;
+        cropState.size = size;
+      } else {
+        // Fallback: centered 65% square
+        const size = Math.round(Math.min(dispW, dispH) * 0.65);
+        cropState.size = size;
+        cropState.x = Math.round((dispW - size) / 2);
+        cropState.y = Math.round((dispH - size) / 2);
+      }
+      updateCropBoxDOM();
+    }
+
+    function openSafezoneModal() {
+      const src = currentOriginalDataUrl || capturedDataUrl || (uploadPreviewImg && uploadPreviewImg.src);
+      if (!src) {
+        showToast('Please upload or capture a photo first.');
+        return;
+      }
+
+      if (!safezoneSourceImg || !safezoneModal) return;
+
+      safezoneSourceImg.onload = () => {
+        initAutoSafezone();
+      };
+      safezoneSourceImg.src = src;
+      safezoneModal.classList.remove('hidden');
+    }
+
+    function closeSafezoneModal() {
+      if (safezoneModal) safezoneModal.classList.add('hidden');
+    }
+
+    // Bind triggers
+    if (btnEditSafezoneUpload) btnEditSafezoneUpload.addEventListener('click', openSafezoneModal);
+    if (btnEditSafezoneCamera) btnEditSafezoneCamera.addEventListener('click', openSafezoneModal);
+    if (btnEditSafezonePill) btnEditSafezonePill.addEventListener('click', openSafezoneModal);
+    if (btnCloseSafezoneModal) btnCloseSafezoneModal.addEventListener('click', closeSafezoneModal);
+    if (btnCancelSafezone) btnCancelSafezone.addEventListener('click', closeSafezoneModal);
+    if (btnResetSafezone) btnResetSafezone.addEventListener('click', initAutoSafezone);
+
+    // Apply safezone
+    if (btnApplySafezone && safezoneSourceImg) {
+      btnApplySafezone.addEventListener('click', () => {
+        try {
+          const dispW = safezoneSourceImg.width;
+          const dispH = safezoneSourceImg.height;
+          const natW = safezoneSourceImg.naturalWidth;
+          const natH = safezoneSourceImg.naturalHeight;
+
+          if (!dispW || !dispH || !natW || !natH) {
+            closeSafezoneModal();
+            return;
+          }
+
+          const scaleX = natW / dispW;
+          const scaleY = natH / dispH;
+
+          const cropXNat = Math.round(cropState.x * scaleX);
+          const cropYNat = Math.round(cropState.y * scaleY);
+          const cropSizeNat = Math.round(cropState.size * Math.max(scaleX, scaleY));
+
+          const cropCanvas = document.createElement('canvas');
+          const targetDim = Math.min(1024, Math.max(256, cropSizeNat));
+          cropCanvas.width = targetDim;
+          cropCanvas.height = targetDim;
+
+          const ctx = cropCanvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          ctx.drawImage(
+            safezoneSourceImg,
+            cropXNat, cropYNat, cropSizeNat, cropSizeNat,
+            0, 0, targetDim, targetDim
+          );
+
+          const customCropDataUrl = cropCanvas.toDataURL('image/jpeg', 0.98);
+          closeSafezoneModal();
+
+          // Estimate age and set session with the custom crop!
+          estimateAgeFromDataUrl(customCropDataUrl, true);
+          showToast('Safezone applied successfully! Ready to generate.');
+        } catch (err) {
+          console.error('Apply safezone error:', err);
+          showToast('Could not apply safezone crop. Please try again.');
+          closeSafezoneModal();
+        }
+      });
+    }
+
+    // Pointer events for dragging and resizing the crop box
+    function onPointerDown(e) {
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      const targetHandle = e.target.closest('.crop-hndl');
+      if (targetHandle) {
+        cropState.isResizing = true;
+        cropState.resizeDir = targetHandle.getAttribute('data-dir');
+        cropState.startX = clientX;
+        cropState.startY = clientY;
+        cropState.startBoxX = cropState.x;
+        cropState.startBoxY = cropState.y;
+        cropState.startBoxSize = cropState.size;
+        e.preventDefault();
+        return;
+      }
+
+      if (e.target.closest('#safezoneCropBox')) {
+        cropState.isDragging = true;
+        cropState.startX = clientX;
+        cropState.startY = clientY;
+        cropState.startBoxX = cropState.x;
+        cropState.startBoxY = cropState.y;
+        e.preventDefault();
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!cropState.isDragging && !cropState.isResizing) return;
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      const deltaX = clientX - cropState.startX;
+      const deltaY = clientY - cropState.startY;
+
+      const maxW = safezoneSourceImg.width || cropState.stageWidth;
+      const maxH = safezoneSourceImg.height || cropState.stageHeight;
+
+      if (cropState.isDragging) {
+        let newX = cropState.startBoxX + deltaX;
+        let newY = cropState.startBoxY + deltaY;
+
+        newX = Math.max(0, Math.min(maxW - cropState.size, newX));
+        newY = Math.max(0, Math.min(maxH - cropState.size, newY));
+
+        cropState.x = newX;
+        cropState.y = newY;
+        updateCropBoxDOM();
+      } else if (cropState.isResizing) {
+        let newSize = cropState.startBoxSize;
+        let newX = cropState.startBoxX;
+        let newY = cropState.startBoxY;
+
+        const dir = cropState.resizeDir;
+        if (dir === 'br') {
+          const delta = Math.max(deltaX, deltaY);
+          newSize = Math.max(50, Math.min(maxW - newX, maxH - newY, cropState.startBoxSize + delta));
+        } else if (dir === 'tl') {
+          const delta = Math.min(deltaX, deltaY);
+          const maxDelta = Math.min(cropState.startBoxX, cropState.startBoxY);
+          const clampedDelta = Math.max(-maxDelta, delta);
+          newSize = Math.max(50, cropState.startBoxSize - clampedDelta);
+          newX = cropState.startBoxX + (cropState.startBoxSize - newSize);
+          newY = cropState.startBoxY + (cropState.startBoxSize - newSize);
+        } else if (dir === 'tr') {
+          const delta = Math.max(deltaX, -deltaY);
+          newSize = Math.max(50, Math.min(maxW - newX, cropState.startBoxY + cropState.startBoxSize, cropState.startBoxSize + delta));
+          newY = cropState.startBoxY - (newSize - cropState.startBoxSize);
+          if (newY < 0) {
+            newSize += newY;
+            newY = 0;
+          }
+        } else if (dir === 'bl') {
+          const delta = Math.max(-deltaX, deltaY);
+          newSize = Math.max(50, Math.min(cropState.startBoxX + cropState.startBoxSize, maxH - newY, cropState.startBoxSize + delta));
+          newX = cropState.startBoxX - (newSize - cropState.startBoxSize);
+          if (newX < 0) {
+            newSize += newX;
+            newX = 0;
+          }
+        }
+
+        cropState.size = Math.round(newSize);
+        cropState.x = Math.round(newX);
+        cropState.y = Math.round(newY);
+        updateCropBoxDOM();
+      }
+    }
+
+    function onPointerUp() {
+      cropState.isDragging = false;
+      cropState.isResizing = false;
+    }
+
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchmove', onPointerMove, { passive: false });
+    window.addEventListener('touchend', onPointerUp);
+
+    const safezoneStage = document.getElementById('safezoneStage');
+    if (safezoneStage) {
+      safezoneStage.addEventListener('mousedown', onPointerDown);
+      safezoneStage.addEventListener('touchstart', onPointerDown, { passive: false });
     }
   }
 });

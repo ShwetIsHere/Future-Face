@@ -81,7 +81,16 @@
             <!-- Selected Image Preview -->
             <div class="dropzone-preview hidden" id="dropzonePreview">
               <img id="uploadPreviewImg" alt="Upload Preview">
-              <button class="btn btn-secondary btn-sm" id="btnChangeUpload">Change Photo</button>
+              <div class="preview-actions-row">
+                <button class="btn btn-secondary btn-sm" id="btnChangeUpload">Change Photo</button>
+                <button class="btn btn-outline btn-sm" id="btnEditSafezoneUpload" type="button">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
+                    <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
+                  </svg>
+                  Edit Safezone
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -104,6 +113,15 @@
             <!-- Video stream -->
             <video id="webcamVideo" autoplay playsinline muted></video>
 
+            <!-- Camera corner viewfinder boundary marks -->
+            <div class="camera-corner-guides" id="cameraCorners">
+              <span class="cam-corner cam-corner-tl"></span>
+              <span class="cam-corner cam-corner-tr"></span>
+              <span class="cam-corner cam-corner-bl"></span>
+              <span class="cam-corner cam-corner-br"></span>
+              <span class="camera-live-badge"><span class="live-dot"></span> LIVE FULL VIEW</span>
+            </div>
+
             <!-- Face guide oval -->
             <div class="face-guide-overlay" id="faceGuide">
               <div class="face-guide-oval"></div>
@@ -124,6 +142,13 @@
           <div class="snapshot-actions hidden" id="snapshotActions">
             <button class="btn btn-secondary btn-sm" id="btnRetakePhoto">Retake</button>
             <button class="btn btn-primary btn-sm" id="btnConfirmSnapshot">Use This Photo</button>
+            <button class="btn btn-outline btn-sm" id="btnEditSafezoneCamera" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
+                <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
+              </svg>
+              Edit Safezone
+            </button>
           </div>
         </div>
 
@@ -160,6 +185,13 @@
             <div class="age-input-row">
               <span class="current-age-value" id="displayEstimatedAge">--</span>
               <span class="age-unit-label" id="ageUnitLabel">years old</span>
+              <button class="btn-safezone-pill hidden" id="btnEditSafezonePill" type="button" title="Adjust face safezone crop">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
+                  <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
+                </svg>
+                Edit Safezone
+              </button>
             </div>
           </div>
         </div>
@@ -467,6 +499,74 @@
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- Interactive Face Safezone Editor Modal -->
+<div class="safezone-modal-backdrop hidden" id="safezoneModal">
+  <div class="safezone-modal-container">
+    <div class="safezone-modal-header">
+      <div class="safezone-title-wrap">
+        <div class="safezone-badge-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
+            <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="safezone-modal-heading">Edit Safezone</h3>
+          <p class="safezone-modal-sub">Drag the grid box or corner handles to select only your face &amp; hair for AI processing.</p>
+        </div>
+      </div>
+      <button class="safezone-modal-close" id="btnCloseSafezoneModal" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="safezone-modal-body">
+      <div class="safezone-canvas-stage-wrap" id="safezoneStageWrap">
+        <div class="safezone-stage" id="safezoneStage">
+          <img id="safezoneSourceImg" alt="Source for safezone crop">
+          
+          <!-- Interactive Resizable Crop Box with 3x3 Grid -->
+          <div class="safezone-crop-rect" id="safezoneCropBox">
+            <!-- 3x3 Rule of Thirds Grid Lines -->
+            <div class="crop-grid-h crop-grid-h1"></div>
+            <div class="crop-grid-h crop-grid-h2"></div>
+            <div class="crop-grid-v crop-grid-v1"></div>
+            <div class="crop-grid-v crop-grid-v2"></div>
+
+            <!-- Corner Handles -->
+            <div class="crop-hndl crop-hndl-tl" data-dir="tl" title="Resize"></div>
+            <div class="crop-hndl crop-hndl-tr" data-dir="tr" title="Resize"></div>
+            <div class="crop-hndl crop-hndl-bl" data-dir="bl" title="Resize"></div>
+            <div class="crop-hndl crop-hndl-br" data-dir="br" title="Resize"></div>
+
+            <!-- Pill Badge Tag -->
+            <span class="crop-badge-indicator">Face Safezone (1:1)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="safezone-modal-footer">
+      <div class="safezone-footer-left">
+        <button class="btn btn-secondary btn-sm" id="btnResetSafezone" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          Reset to Auto
+        </button>
+      </div>
+      <div class="safezone-footer-right">
+        <button class="btn btn-secondary btn-sm" id="btnCancelSafezone" type="button">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="btnApplySafezone" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Apply Safezone
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
