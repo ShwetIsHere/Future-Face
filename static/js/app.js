@@ -871,12 +871,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (thumbPlaceholder) thumbPlaceholder.classList.add('hidden');
 
-        // Reveal Safezone action buttons
-        const btnEditSafezoneUpload = document.getElementById('btnEditSafezoneUpload');
-        const btnEditSafezoneCamera = document.getElementById('btnEditSafezoneCamera');
+        // Reveal Safezone action button
         const btnEditSafezonePill = document.getElementById('btnEditSafezonePill');
-        if (btnEditSafezoneUpload) btnEditSafezoneUpload.classList.remove('hidden');
-        if (btnEditSafezoneCamera) btnEditSafezoneCamera.classList.remove('hidden');
         if (btnEditSafezonePill) btnEditSafezonePill.classList.remove('hidden');
 
         setupTargetAgeControls(currentEstimatedAge);
@@ -1242,8 +1238,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (presetChipsContainer) {
           presetChipsContainer.innerHTML = '<span class="no-presets-hint">Upload or capture a photo to unlock age shift presets</span>';
         }
-        if (btnEditSafezoneUpload) btnEditSafezoneUpload.classList.add('hidden');
-        if (btnEditSafezoneCamera) btnEditSafezoneCamera.classList.add('hidden');
         if (btnEditSafezonePill) btnEditSafezonePill.classList.add('hidden');
         stopWebcam();
         updateStepProgress(1);
@@ -1261,8 +1255,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelSafezone = document.getElementById('btnCancelSafezone');
     const btnResetSafezone = document.getElementById('btnResetSafezone');
     const btnApplySafezone = document.getElementById('btnApplySafezone');
-    const btnEditSafezoneUpload = document.getElementById('btnEditSafezoneUpload');
-    const btnEditSafezoneCamera = document.getElementById('btnEditSafezoneCamera');
     const btnEditSafezonePill = document.getElementById('btnEditSafezonePill');
 
     let cropState = {
@@ -1352,8 +1344,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Bind triggers
-    if (btnEditSafezoneUpload) btnEditSafezoneUpload.addEventListener('click', openSafezoneModal);
-    if (btnEditSafezoneCamera) btnEditSafezoneCamera.addEventListener('click', openSafezoneModal);
     if (btnEditSafezonePill) btnEditSafezonePill.addEventListener('click', openSafezoneModal);
     if (btnCloseSafezoneModal) btnCloseSafezoneModal.addEventListener('click', closeSafezoneModal);
     if (btnCancelSafezone) btnCancelSafezone.addEventListener('click', closeSafezoneModal);
