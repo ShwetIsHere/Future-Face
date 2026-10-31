@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback — FutureFace{% endblock %}
+
+{% block content %}
+<div class="feedback-page-container">
+
+  <div class="feedback-page-header">
+    <center>
+      <div class="hero-pill-badge">
+        <span class="sparkle-icon">💬</span>
+        <span>Community &amp; User Experience</span>
+      </div>
+    </center>
+    <h1 class="feedback-page-title">We Value Your Feedback</h1>
+    <p class="feedback-page-desc">
+      Have a suggestion, bug report, or feature idea for FutureFace? Let us know what you think.
+    </p>
+  </div>
+
+  <div class="feedback-layout-grid">
+    
+    <!-- Feedback Form Card -->
+    <div class="feedback-form-card card">
+      <form id="standaloneFeedbackForm" class="standalone-feedback-form">
+        
+        <!-- Name -->
+        <div class="form-group">
+          <label for="feedbackName" class="form-label">
+            <span>Your Name</span>
+            <span class="required-mark">*</span>
+          </label>
+          <input type="text" id="feedbackName" class="form-input" placeholder="e.g. Alex Johnson" required autocomplete="name">
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="feedbackEmail" class="form-label">
+            <span>Your Email</span>
+            <span class="required-mark">*</span>
+          </label>
+          <input type="email" id="feedbackEmail" class="form-input" placeholder="e.g. alex@example.com" required autocomplete="email">
+        </div>
+
+        <!-- Star Rating -->
+        <div class="form-group">
+          <label class="form-label">Experience Rating</label>
+          <div class="star-rating" id="feedbackStarRating">
+            <span class="star active" data-rating="1">&#9733;</span>
+            <span class="star active" data-rating="2">&#9733;</span>
+            <span class="star active" data-rating="3">&#9733;</span>
+            <span class="star active" data-rating="4">&#9733;</span>
+            <span class="star active" data-rating="5">&#9733;</span>
+          </div>
+          <span class="rating-label-hint" id="ratingLabelHint">5 stars — Excellent experience!</span>
+        </div>
+
+        <!-- Feedback Message -->
+        <div class="form-group">
+          <label for="feedbackMessage" class="form-label">
+            <span>Feedback / Suggestions</span>
+            <span class="required-mark">*</span>
+          </label>
+          <textarea id="feedbackMessage" class="form-textarea" rows="5" placeholder="Share your thoughts, feature requests, or any issues you encountered..." required></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-large btn-block" id="btnSubmitPageFeedback">
+          <span>Submit Feedback</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+
+      <!-- Feedback Success Message (Shown upon submission) -->
+      <div class="feedback-success-state hidden" id="feedbackSuccessState">
+        <div class="success-icon-circle">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h3>Thank You for Your Feedback!</h3>
+        <p>Your suggestions and rating have been received. We appreciate your support in making FutureFace better.</p>
+        <div class="success-actions-row">
+          <a href="/try-now" class="btn btn-primary">Try Live Transformation</a>
+          <a href="/" class="btn btn-secondary">Back to Home</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Developer & Project Info Sidebar -->
+    <div class="feedback-info-sidebar">
+      
+      <div class="info-card card">
+        <h4 class="info-card-title">Developed by Shwet Patel</h4>
+        <p class="info-card-text">
+          Computer vision &amp; deep learning developer exploring generative AI, age progression, and facial biometrics.
+        </p>
+        <a href="https://heyshwet.me" target="_blank" rel="noopener noreferrer" class="portfolio-badge-link" style="display: inline-flex;">
+          <span>Visit Portfolio (heyshwet.me)</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </a>
+      </div>
+
+      <div class="info-card card">
+        <h4 class="info-card-title">Open Source on GitHub</h4>
+        <p class="info-card-text">
+          Check out the code, contribute, or open an issue on the official GitHub repository.
+        </p>
+        <a href="https://github.com/ShwetIsHere/Future-Face" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="display: inline-flex; width: 100%;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub: ShwetIsHere/Future-Face</span>
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

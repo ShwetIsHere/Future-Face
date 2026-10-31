@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Try Now — FutureFace AI Age Progression{% endblock %}
+
+{% block content %}
+<section class="try-now-section">
+  
+  <div class="try-now-header">
+    <center>
+      <div class="hero-pill-badge">
+        <span class="sparkle-icon">⚡</span>
+        <span>Live AI Transformation Workspace</span>
+      </div>
+    </center>
+    <h1 class="try-now-title">Transform Your Facial Age</h1>
+    <p class="try-now-desc">
+      Upload a portrait or capture live from your webcam. Our AI will identify your current age and let you simulate any target age between 8 and 90 years.
+    </p>
+  </div>
+
+  <div class="generator-card card" id="try-now">
+    <!-- Step Navigation Bar -->
+    <div class="step-nav-bar">
+      <div class="step-node active" id="stepNode1">
+        <span class="step-num">1</span>
+        <span class="step-name">Upload</span>
+      </div>
+      <div class="step-line" id="stepLine1"></div>
+      <div class="step-node" id="stepNode2">
+        <span class="step-num">2</span>
+        <span class="step-name">Set Age</span>
+      </div>
+      <div class="step-line" id="stepLine2"></div>
+      <div class="step-node" id="stepNode3">
+        <span class="step-num">3</span>
+        <span class="step-name">Generate</span>
+      </div>
+      <div class="step-line" id="stepLine3"></div>
+      <div class="step-node" id="stepNode4">
+        <span class="step-num">4</span>
+        <span class="step-name">Result</span>
+      </div>
+    </div>
+
+    <!-- 2-Column Generator Workspace -->
+    <div class="generator-body-grid">
+      
+      <!-- Column 1: Upload / Live Camera -->
+      <div class="generator-col upload-col">
+        <div class="col-header">
+          <h3>Upload Your Photo</h3>
+          <!-- Input mode tabs -->
+          <div class="mini-tabs">
+            <button class="mini-tab-btn active" id="tabUploadBtn" data-tab="tabUpload">File Upload</button>
+            <button class="mini-tab-btn" id="tabCameraBtn" data-tab="tabCamera">Live Camera</button>
+          </div>
+        </div>
+
+        <!-- Upload Dropzone View -->
+        <div class="tab-panel active" id="tabUpload">
+          <div class="dropzone-modern" id="dropzone">
+            <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
+            <div class="dropzone-inner" id="dropzoneContent">
+              <div class="upload-cloud-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <p class="dropzone-text-primary">Drag &amp; drop an image here</p>
+              <p class="dropzone-text-secondary">or <span class="highlight-browse">click to browse</span></p>
+              <span class="dropzone-support">Supports: JPG, PNG, WEBP (Auto Face Cropped)</span>
+            </div>
+
+            <!-- Selected Image Preview -->
+            <div class="dropzone-preview hidden" id="dropzonePreview">
+              <img id="uploadPreviewImg" alt="Upload Preview">
+              <button class="btn btn-secondary btn-sm" id="btnChangeUpload">Change Photo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Camera View -->
+        <div class="tab-panel" id="tabCamera">
+          <div class="camera-viewport state-off" id="cameraViewport">
+            <!-- State Off Placeholder -->
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <div class="camera-icon-circle">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </div>
+              <p class="cam-p1">Camera is currently off</p>
+              <button class="btn btn-primary btn-sm" id="btnStartCamera">Start Live Camera</button>
+            </div>
+
+            <!-- Video stream -->
+            <video id="webcamVideo" autoplay playsinline muted></video>
+
+            <!-- Face guide oval -->
+            <div class="face-guide-overlay" id="faceGuide">
+              <div class="face-guide-oval"></div>
+              <span class="guide-text">Position face inside oval</span>
+            </div>
+
+            <!-- Canvas & Snapshot preview -->
+            <canvas id="snapshotCanvas" class="hidden"></canvas>
+            <img id="cameraSnapshotPreview" class="snapshot-preview" alt="Captured Frame">
+          </div>
+
+          <!-- Camera Controls -->
+          <div class="camera-controls hidden" id="cameraActiveControls">
+            <button class="btn btn-primary btn-sm" id="btnCapturePhoto">Capture Photo</button>
+            <button class="btn btn-secondary btn-sm" id="btnStopCamera">Stop</button>
+          </div>
+
+          <div class="snapshot-actions hidden" id="snapshotActions">
+            <button class="btn btn-secondary btn-sm" id="btnRetakePhoto">Retake</button>
+            <button class="btn btn-primary btn-sm" id="btnConfirmSnapshot">Use This Photo</button>
+          </div>
+        </div>
+
+        <!-- Quick Demo Faces Picker -->
+        <div class="demo-samples-picker">
+          <span class="samples-title">Or pick a demo portrait:</span>
+          <div class="demo-chips-scroll" id="samplesGrid">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2: Set Target Age & Execution -->
+      <div class="generator-col age-col">
+        <div class="col-header">
+          <h3>Set Target Age</h3>
+        </div>
+
+        <!-- Current / Estimated Age display box -->
+        <div class="form-group">
+          <label for="currentAgeInput" class="form-label">
+            Current Age <span class="label-hint" id="currentAgeHint">(AI Estimated via ResNet-50)</span>
+          </label>
+          <div class="current-age-box">
+            <div class="face-thumb-mini" id="thumbMiniWrap">
+              <img id="croppedFaceImg" class="thumb-mini-img hidden" alt="Cropped Face">
+              <div class="thumb-mini-placeholder" id="thumbPlaceholder">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="7" r="4"></circle>
+                  <path d="M5.5 21a8.5 8.5 0 0 1 13 0"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="age-input-row">
+              <span class="current-age-value" id="displayEstimatedAge">20</span>
+              <span class="age-unit-label">years old</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target Age Slider Section -->
+        <div class="form-group target-age-group">
+          <div class="target-age-header">
+            <label for="yearsSlider" class="form-label">Target Age</label>
+            <span class="target-age-badge" id="targetAgeBadge">60 years</span>
+          </div>
+
+          <!-- Interactive Slider (Strictly bounded between 8 and 90) -->
+          <div class="slider-wrapper">
+            <input type="range" id="yearsSlider" min="8" max="90" value="60" step="1" class="custom-range-slider">
+            <div class="slider-ticks">
+              <span id="sliderTickMin">8</span>
+              <span>30</span>
+              <span class="tick-center" id="sliderTickCenter">49</span>
+              <span>70</span>
+              <span id="sliderTickMax">90</span>
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="preset-chips-wrap">
+            <div class="preset-chips" id="presetChipsContainer">
+              <!-- Populated dynamically to guarantee [8, 90] bounds -->
+            </div>
+          </div>
+
+          <!-- Dynamic Target Summary -->
+          <div class="target-summary-pill" id="targetSummaryPill">
+            <span id="bannerSummaryText">Transforming approximately +40 years into the future</span>
+          </div>
+        </div>
+
+        <!-- Big CTA: Generate Future Face Button -->
+        <div class="generate-btn-wrap">
+          <button class="btn btn-primary btn-large btn-block" id="btnExecuteTransform">
+            <span>Generate Future Face</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GENERATED RESULT PRESENTATION (Revealed after transformation) -->
+    <div class="result-presentation-box hidden" id="resultPresentationBox">
+      <div class="result-divider-header">
+        <div class="success-pill">✓ Transformation Complete</div>
+        <div class="result-view-toggles">
+          <button class="result-toggle-btn active" id="btnViewSplit">Before &amp; After Slider</button>
+          <button class="result-toggle-btn" id="btnViewSide">Comparison Poster</button>
+        </div>
+      </div>
+
+      <!-- View 1: Split Slider -->
+      <div class="result-panel active" id="viewSplitPanel">
+        <div class="split-slider-header-labels">
+          <div class="slider-badge badge-orig">
+            <span class="badge-dot dot-cyan"></span>
+            <span id="sliderBadgeOrig">Original (Age 20)</span>
+          </div>
+          <div class="slider-badge badge-trans">
+            <span class="badge-dot dot-purple"></span>
+            <span id="sliderBadgeTrans">Transformed (Age 60)</span>
+          </div>
+        </div>
+
+        <div class="split-slider-container" id="splitSliderContainer">
+          <img id="imgSplitTransformed" class="split-img-after" alt="Transformed Face">
+          <div class="split-img-before-wrap" id="splitBeforeWrap">
+            <img id="imgSplitOriginal" class="split-img-before" alt="Original Face">
+          </div>
+          <div class="split-handle" id="splitHandle">
+            <div class="handle-line"></div>
+            <div class="handle-circle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </div>
+        </div>
+        <p class="slider-caption">Drag or touch-slide divider horizontally to compare</p>
+      </div>
+
+      <!-- View 2: Side-by-Side Poster (Box-to-box fit) -->
+      <div class="result-panel" id="viewSidePanel">
+        <div class="poster-preview-wrapper">
+          <img id="imgComparisonPoster" class="poster-preview-img" alt="Comparison Poster">
+        </div>
+      </div>
+
+      <!-- Actions Row -->
+      <div class="result-actions-bar">
+        <div class="result-stats-group">
+          <span class="stat-item">Est: <strong id="statOrigAge">20.0 yrs</strong></span>
+          <span class="stat-arrow">➔</span>
+          <span class="stat-item highlight">Shift: <strong id="statShift">+40 yrs</strong></span>
+          <span class="stat-arrow">➔</span>
+          <span class="stat-item success">Target: <strong id="statTargetAge">60 yrs</strong></span>
+        </div>
+
+        <div class="result-buttons-group">
+          <button class="btn btn-secondary btn-sm" id="btnTryAnotherAge">Change Age</button>
+          <button class="btn btn-secondary btn-sm" id="btnRestartAll">New Photo</button>
+          <a id="btnDownloadPoster" class="btn btn-primary btn-sm" download="FutureFace_Comparison.jpg" target="_blank">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download Result</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- GENERATING PROGRESS OVERLAY -->
+<div class="progress-overlay hidden" id="progressOverlay">
+  <div class="progress-box">
+    <div class="radar-scanner">
+      <div class="radar-sweep"></div>
+      <div class="scanner-face-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 15h8"></path>
+          <line x1="9" y1="9" x2="9.01" y2="9"></line>
+          <line x1="15" y1="9" x2="15.01" y2="9"></line>
+        </svg>
+      </div>
+    </div>
+    <h3 id="progressTitle">Synthesizing Age Progression...</h3>
+    <p id="progressSubtitle">SAM StyleGAN2 model is generating facial age changes. This takes ~10–20 seconds on GPU.</p>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

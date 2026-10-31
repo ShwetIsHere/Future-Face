@@ -27,6 +27,7 @@ YUNET_PATH = PROJECT_DIR / "models" / "face_detection_yunet_2023mar.onnx"
 SAM_CHECKPOINT = PROJECT_DIR / "SAM-official" / "pretrained_models" / "sam_ffhq_aging.pt"
 SAM_INFERENCE_SCRIPT = PROJECT_DIR / "SAM-official" / "scripts" / "inference.py"
 IMAGES_DIR = PROJECT_DIR / "images"
+DEMO_DIR = PROJECT_DIR / "demo"
 
 IMAGE_SIZE = 224
 MEAN = [0.485, 0.456, 0.406]
@@ -250,7 +251,19 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", active_page="home")
+
+@app.route("/try-now")
+def try_now():
+    return render_template("try_now.html", active_page="try_now")
+
+@app.route("/about")
+def about():
+    return render_template("about.html", active_page="about")
+
+@app.route("/feedback")
+def feedback():
+    return render_template("feedback.html", active_page="feedback")
 
 @app.route("/api/health")
 def health():
@@ -279,6 +292,24 @@ def serve_sample_image(filename):
     from flask import send_from_directory
     return send_from_directory(IMAGES_DIR, filename)
 
+@app.route("/demo/<path:filename>")
+def serve_demo_file(filename):
+    from flask import send_from_directory
+    return send_from_directory(DEMO_DIR, filename)
+
+@app.route("/api/feedback", methods=["POST"])
+def api_feedback():
+    try:
+        data = request.get_json(force=True) if request.is_json else request.form
+        name = data.get("name", "Anonymous")
+        email = data.get("email", "")
+        rating = data.get("rating", "5")
+        message = data.get("feedback") or data.get("message", "")
+        print(f"[Feedback] Name: {name} | Rating: {rating} stars | Email: {email} | Message: {message}")
+        return jsonify({"success": True, "message": "Thank you for your feedback!"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
 @app.route("/api/estimate-age", methods=["POST"])
 def api_estimate_age():
     try:
@@ -289,8 +320,8 @@ def api_estimate_age():
             file = request.files["image"]
             if file and file.filename:
                 image_bytes = file.read()
-        elif request.is_json and "image" in request.json:
-            data_url = request.json["image"]
+        elif request.is_json and ("image" in request.json or "image_data" in request.json):
+            data_url = request.json.get("image") or request.json.get("image_data")
             if "," in data_url:
                 header, encoded = data_url.split(",", 1)
             else:
@@ -330,7 +361,8 @@ def api_estimate_age():
             "success": True,
             "session_id": session_id,
             "estimated_age": round(predicted_age, 1),
-            "cropped_url": cropped_data_url
+            "cropped_url": cropped_data_url,
+            "cropped_image": cropped_data_url
         })
 
     except Exception as exc:
@@ -343,10 +375,10 @@ def api_transform():
     try:
         data = request.get_json(force=True)
         session_id = data.get("session_id")
-        years = data.get("years")
+        years = data.get("years") if data.get("years") is not None else data.get("shift")
 
         if not session_id or years is None:
-            return jsonify({"success": False, "error": "Missing session_id or years parameter."}), 400
+            return jsonify({"success": False, "error": "Missing session_id or years/shift parameter."}), 400
 
         try:
             years = int(years)
@@ -411,11 +443,16 @@ def api_transform():
             "session_id": session_id,
             "estimated_age": round(estimated_age, 1),
             "years": years,
+            "shift_years": years,
             "target_age": target_age,
             "direction": direction,
             "cropped_url": cropped_data_url,
+            "cropped_image": cropped_data_url,
+            "original_image": cropped_data_url,
             "transformed_url": transformed_data_url,
-            "comparison_url": comparison_data_url
+            "transformed_image": transformed_data_url,
+            "comparison_url": comparison_data_url,
+            "comparison_image": comparison_data_url
         })
 
     except Exception as exc:

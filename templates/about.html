@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}About & Project Journey — FutureFace{% endblock %}
+
+{% block content %}
+<div class="about-page-container">
+
+  <!-- HERO BANNER -->
+  <header class="about-hero-header">
+    <center>
+      <div class="hero-pill-badge">
+        <span class="sparkle-icon">📖</span>
+        <span>Engineering Case Study &amp; Project Journey</span>
+      </div>
+    </center>
+
+    <h1 class="about-page-title">Introducing Future-Face</h1>
+    <h2 class="about-page-subtitle">AI-Powered Facial Age Estimation and Age Transformation</h2>
+
+    <div class="about-links-row">
+      <a href="https://github.com/ShwetIsHere/Future-Face" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        <span>GitHub: ShwetIsHere/Future-Face</span>
+      </a>
+
+      <a href="https://heyshwet.me" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <span>Portfolio: heyshwet.me</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Combined Overview Showcase -->
+    <div class="about-showcase-card card">
+      <img src="/demo/combined.png" alt="Future-Face Combined Demonstration" class="about-combined-img">
+      <div class="showcase-caption">
+        <strong>Figure 1:</strong> FutureFace end-to-end pipeline combining face detection, age estimation, and continuous facial age synthesis.
+      </div>
+    </div>
+  </header>
+
+  <!-- SECTION: WHY WAS THIS PROJECT CREATED? -->
+  <section class="about-content-card card">
+    <div class="about-section-badge">The Motivation</div>
+    <h2 class="about-section-title">Why Was Future-Face Created?</h2>
+    
+    <div class="quote-callout">
+      <p class="quote-text">
+        &ldquo;What if an individual captured in an old CCTV image needs to be identified years later, after significant changes in their appearance?&rdquo;
+      </p>
+    </div>
+
+    <p class="about-body-text">
+      This question inspired me to develop <strong>Future-Face</strong>, an AI-powered project that estimates facial age and generates age-transformed facial images.
+    </p>
+
+    <p class="about-body-text">
+      In real-world investigative scenarios, historical CCTV footage or old photographs may contain images of suspects or missing individuals. If a person remains unidentified for years, understanding how their appearance might have changed over time could potentially assist investigators in reviewing leads and comparing visual information.
+    </p>
+  </section>
+
+  <!-- SECTION: PROJECT JOURNEY -->
+  <section class="about-content-card card">
+    <div class="about-section-badge">The Architecture</div>
+    <h2 class="about-section-title">Project Journey &amp; Engineering Evolution</h2>
+
+    <p class="about-body-text">
+      I structured the system into two distinct, high-performance stages:
+    </p>
+
+    <div class="stages-summary-grid">
+      <div class="stage-mini-box">
+        <span class="stage-tag">Stage 1</span>
+        <h4>Age Identification</h4>
+        <p>Extract face crop from image and estimate continuous chronological age with high precision.</p>
+      </div>
+      <div class="stage-arrow">➔</div>
+      <div class="stage-mini-box">
+        <span class="stage-tag">Stage 2</span>
+        <h4>Age Transformation</h4>
+        <p>Synthesize identity-preserving facial aging forward or backward by a requested number of years.</p>
+      </div>
+    </div>
+
+    <!-- PART 1: AGE IDENTIFICATION -->
+    <div class="journey-step-block">
+      <div class="step-counter-header">
+        <span class="step-circle">1</span>
+        <h3>Part 1: Facial Age Identification</h3>
+      </div>
+      <p class="about-body-text">
+        For age identification, I utilized the <strong>UTKFace dataset</strong>, which consists of more than <strong>24,000+ labeled images</strong> spanning children, teens, and adults across various ethnicities.
+      </p>
+      <p class="about-body-text">
+        I fine-tuned a <strong>ResNet-50</strong> deep convolutional architecture for continuous age regression and combined it with <strong>YuNet</strong>, a lightweight and ultra-fast ONNX-based face detector capable of pinpointing bounding boxes and facial landmarks even in challenging lighting conditions.
+      </p>
+
+      <div class="journey-media-frame">
+        <img src="/demo/age_estimate.png" alt="Age Estimation Architecture & Results" class="journey-img-full">
+        <div class="frame-label">YuNet face detection combined with ResNet-50 age regression</div>
+      </div>
+    </div>
+
+    <!-- PART 2: AGE TRANSFORMATION & CHALLENGES -->
+    <div class="journey-step-block">
+      <div class="step-counter-header">
+        <span class="step-circle">2</span>
+        <h3>Part 2: Age Transformation &amp; Key Challenges Solved</h3>
+      </div>
+      
+      <!-- Challenge 1: FG-Net & Blurry Output -->
+      <div class="challenge-subcard">
+        <h4 class="challenge-title">Challenge 1: The FG-Net Dataset &amp; Blurry/Messy Images</h4>
+        <p class="about-body-text">
+          Initially, I tested with the <strong>FG-Net dataset</strong>, which contains approximately 1,000 images. However, this dataset was captured decades ago; the images were low-resolution, noisy, and blurry. When training initial generative models on FG-Net, the model output messy, distorted, and inappropriate facial artifacts.
+        </p>
+
+        <!-- Side-by-Side: problem-1.jpg vs problem-1-1.png -->
+        <div class="side-by-side-wrapper">
+          <div class="comparison-column">
+            <span class="column-badge badge-given">Given Image (FG-Net input)</span>
+            <div class="comparison-img-box">
+              <img src="/demo/problem-1-1.png" alt="Given Image problem 1" loading="lazy">
+            </div>
+            <span class="column-filename">Original Photo</span>
+          </div>
+
+          <div class="comparison-column">
+            <span class="column-badge badge-error">Transformed (Blurry &amp; Messy Artifacts)</span>
+            <div class="comparison-img-box">
+              <img src="/demo/problem-1.jpg" alt="Transformed messy result" loading="lazy">
+            </div>
+            <span class="column-filename">Transform</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Challenge 2: CACD & Gender Inconsistency -->
+      <div class="challenge-subcard">
+        <h4 class="challenge-title">Challenge 2: The CACD Dataset &amp; The Gender Shift Problem</h4>
+        <p class="about-body-text">
+          To overcome the low-resolution issue, I moved to the <strong>CACD (Cross-Age Celebrity Dataset)</strong>, which contains over <strong>150,000+ high-quality images</strong> of celebrities collected across the internet.
+        </p>
+        <p class="about-body-text">
+          While image resolution drastically improved, a critical new problem emerged: <em>the model struggled with gender consistency</em>. When given a female portrait, the model would occasionally transform her into a male subject or vice versa as age progressed.
+        </p>
+
+        <!-- Side-by-Side: Gender_problem.jpg vs Gender_problem_fix.jpg -->
+        <div class="side-by-side-wrapper">
+          <div class="comparison-column">
+            <span class="column-badge badge-given">Gender Inconsistency Issue</span>
+            <div class="comparison-img-box">
+              <img src="/demo/Gender_problem.jpg" alt="Gender problem input" loading="lazy">
+            </div>
+          </div>
+
+          <div class="comparison-column">
+            <span class="column-badge badge-warning">Gender Preserved (Corrected Model)</span>
+            <div class="comparison-img-box">
+              <img src="/demo/Gender_problem_fix.jpg" alt="Gender problem fix comparison" loading="lazy">
+            </div>
+          </div>
+        </div>
+        <p class="caption-note">
+          As shown above, the input image was female, but the unconditioned latent space frequently drifted into male facial traits during advanced aging.
+        </p>
+      </div>
+
+      <!-- Breakthrough: SAM Model -->
+      <div class="challenge-subcard success-card">
+        <h4 class="challenge-title highlight-title">The Breakthrough: SAM (Style-based Age Manipulation)</h4>
+        <p class="about-body-text">
+          To definitively solve both artifact distortion and gender drift, I integrated the <strong>SAM (Style-based Age Manipulation)</strong> model. SAM leverages StyleGAN2's disentangled latent space with a dedicated age transformation module and identity preservation loss.
+        </p>
+        <p class="about-body-text">
+          By fine-tuning SAM on CACD, the generator successfully preserved core identity, gender, bone structure, and facial demeanor, producing clean, photorealistic results across the lifespan.
+        </p>
+
+        <!-- Side-by-Side: demo1.jpg vs demo2.jpg -->
+        <div class="side-by-side-wrapper">
+          <div class="comparison-column">
+            <span class="column-badge badge-given">ging Progression (+25 Years | Target Age 65)</span>
+            <div class="comparison-img-box">
+              <img src="/demo/demo1.jpg" alt="Given portrait demo1" loading="lazy">
+            </div>
+            <span class="column-filename">Given image (Age 39.5) → Transformed to Target Age 65</span>
+          </div>
+
+          <div class="comparison-column">
+            <span class="column-badge badge-success">Youth Regression (-25 Years | Target Age 15)</span>
+            <div class="comparison-img-box">
+              <img src="/demo/demo2.jpg" alt="Transformed portrait demo2" loading="lazy">
+            </div>
+            <span class="column-filename">Given image (Age 39.5) → Transformed to Target Age 15</span>
+          </div>
+        </div>
+        <p class="caption-note success-note">
+          Near-perfect visualization: natural aging signs, preserved facial geometry, and accurate gender identity.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA ROW -->
+  <div class="about-bottom-cta">
+    <a href="/try-now" class="btn btn-primary btn-large">
+      <span>Try Live Age Transformation</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </a>
+    <a href="https://github.com/ShwetIsHere/Future-Face" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-large">
+      <span>View GitHub Repository</span>
+    </a>
+  </div>
+
+</div>
+{% endblock %}

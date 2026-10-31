@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{% block title %}FutureFace — AI Powered Face Age Progression{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css?v=5.0">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="background-glow"></div>
+  <div class="background-grid"></div>
+
+  <!-- NAVIGATION BAR (Exactly 4 Options: Home, Try Now, About, Feedback) -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <a href="/" class="brand-link">
+          <div class="brand-logo-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+          </div>
+          <span class="brand-name">FutureFace</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Menu (4 items only) -->
+      <nav class="nav-menu" id="navMenu">
+        <a href="/" class="nav-link {% if active_page == 'home' %}active{% endif %}">Home</a>
+        <a href="/try-now" class="nav-link {% if active_page == 'try_now' %}active{% endif %}">Try Now</a>
+        <a href="/about" class="nav-link {% if active_page == 'about' %}active{% endif %}">About</a>
+        <a href="/feedback" class="nav-link {% if active_page == 'feedback' %}active{% endif %}">Feedback</a>
+      </nav>
+
+      <!-- Right Header Actions (No Login / Register) -->
+      <div class="header-actions">
+        <!-- GPU status indicator -->
+        <div class="system-status" id="systemStatus" title="GPU Hardware Status">
+          <span class="status-dot"></span>
+          <span class="status-text" id="statusDevice">GPU Ready</span>
+        </div>
+
+        <!-- Portfolio Link -->
+        <a href="https://heyshwet.me" target="_blank" rel="noopener noreferrer" class="portfolio-badge-link" title="Developed by Shwet Patel">
+          <span>heyshwet.me</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </a>
+
+        <!-- Dark / Light Theme Toggle -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle theme" title="Toggle Light / Dark Theme">
+          <svg class="theme-icon moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="theme-icon sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN BODY CONTENT -->
+  <main class="app-main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- GLOBAL TOAST NOTIFICATION -->
+  <div class="error-toast hidden" id="errorToast">
+    <div class="toast-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <div class="toast-message" id="toastMessage">Notification message</div>
+    <button class="toast-close" id="toastClose">&times;</button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <div class="footer-col-left">
+        <div class="footer-brand">
+          <span class="footer-brand-name">FutureFace</span>
+          <span class="footer-brand-desc">AI-Powered Facial Age Progression</span>
+        </div>
+        <p class="copyright">&copy; 2026 FutureFace &bull; Developed by <a href="https://heyshwet.me" target="_blank" rel="noopener noreferrer" class="footer-link">Shwet Patel (heyshwet.me)</a></p>
+      </div>
+
+      <div class="footer-col-right">
+        <nav class="footer-nav">
+          <a href="/">Home</a>
+          <a href="/try-now">Try Now</a>
+          <a href="/about">About</a>
+          <a href="/feedback">Feedback</a>
+          <a href="https://github.com/ShwetIsHere/Future-Face" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://heyshwet.me" target="_blank" rel="noopener noreferrer">Portfolio</a>
+        </nav>
+        <span class="footer-models-info">ResNet-50 &bull; YuNet ONNX &bull; SAM StyleGAN2 &bull; UTKFace &bull; CACD</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js?v=5.0"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

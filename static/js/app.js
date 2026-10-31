@@ -1,26 +1,13 @@
 /**
- * Future-Face Web Application Client Logic
- * Theme matching Shwet Patel's Portfolio (heyshwet.me)
- * Features:
- * - Dark & Light Theme toggle with localStorage persistence
- * - Mobile-first responsive WebRTC Camera with Front/Rear flip support
- * - Dynamic target age bounding strictly between 8 and 90 years
- * - Responsive Before & After split slider with pointer/touch support
- * - In-Memory processing (Zero disk saving)
+ * FutureFace — AI Powered Face Age Progression Client Logic
+ * Multi-Page Application (Home, Try Now, About, Feedback)
+ * Developed by Shwet Patel (heyshwet.me)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Target age boundary constants
+  // Target age boundary constraints
   const MIN_TARGET_AGE = 8;
   const MAX_TARGET_AGE = 90;
-
-  // Global State
-  let currentSessionId = null;
-  let currentEstimatedAge = null;
-  let currentShift = 10;
-  let webcamStream = null;
-  let currentFacingMode = 'user'; // 'user' (front) or 'environment' (rear)
-  let selectedFile = null;
 
   // Safe DOM Helper Functions (Guarantees zero null pointer exceptions)
   function safeSetText(elOrId, text) {
@@ -33,8 +20,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.innerHTML = html;
   }
 
+  function showToast(message, isError = true) {
+    const errorToast = document.getElementById('errorToast');
+    const toastMessage = document.getElementById('toastMessage');
+    if (errorToast && toastMessage) {
+      toastMessage.textContent = message;
+      errorToast.style.backgroundColor = isError ? '#ef4444' : '#10b981';
+      errorToast.classList.remove('hidden');
+      setTimeout(() => {
+        errorToast.classList.add('hidden');
+      }, 5000);
+    }
+  }
+
+  const toastClose = document.getElementById('toastClose');
+  if (toastClose) {
+    toastClose.addEventListener('click', () => {
+      const errorToast = document.getElementById('errorToast');
+      if (errorToast) errorToast.classList.add('hidden');
+    });
+  }
+
   // ============================================================
-  // THEME MANAGEMENT (Dark & Light matching heyshwet.me)
+  // 1. THEME MANAGEMENT (Light & Dark Mode)
   // ============================================================
   const themeToggleBtn = document.getElementById('themeToggleBtn');
   const savedTheme = localStorage.getItem('futureface-theme') || 'dark';
@@ -52,764 +60,771 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // DOM Elements - Navigation & Header
+  // ============================================================
+  // 2. MOBILE NAVIGATION MENU DRAWER
+  // ============================================================
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const navMenu = document.getElementById('navMenu');
+
+  if (mobileMenuBtn && navMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      navMenu.classList.toggle('open');
+    });
+
+    navMenu.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        navMenu.classList.remove('open');
+      });
+    });
+  }
+
+  // ============================================================
+  // 3. GPU HARDWARE HEALTH CHECK
+  // ============================================================
   const statusDevice = document.getElementById('statusDevice');
-  const errorToast = document.getElementById('errorToast');
-  const toastMessage = document.getElementById('toastMessage');
-  const toastClose = document.getElementById('toastClose');
-
-  // DOM Elements - Step Cards
-  const stepInput = document.getElementById('stepInput');
-  const stepAgeEstimate = document.getElementById('stepAgeEstimate');
-  const stepResult = document.getElementById('stepResult');
-  const progressOverlay = document.getElementById('progressOverlay');
-
-  // DOM Elements - Step 1: Input
-  const tabCameraBtn = document.getElementById('tabCameraBtn');
-  const tabUploadBtn = document.getElementById('tabUploadBtn');
-  const tabCamera = document.getElementById('tabCamera');
-  const tabUpload = document.getElementById('tabUpload');
-
-  // Camera Elements
-  const cameraViewport = document.getElementById('cameraViewport');
-  const webcamVideo = document.getElementById('webcamVideo');
-  const snapshotCanvas = document.getElementById('snapshotCanvas');
-  const cameraSnapshotPreview = document.getElementById('cameraSnapshotPreview');
-  const cameraActiveControls = document.getElementById('cameraActiveControls');
-  const snapshotActions = document.getElementById('snapshotActions');
-  const btnStartCamera = document.getElementById('btnStartCamera');
-  const btnCapturePhoto = document.getElementById('btnCapturePhoto');
-  const btnStopCamera = document.getElementById('btnStopCamera');
-  const btnRetakePhoto = document.getElementById('btnRetakePhoto');
-  const btnConfirmSnapshot = document.getElementById('btnConfirmSnapshot');
-  const btnFlipCamera = document.getElementById('btnFlipCamera');
-
-  // Upload Elements
-  const dropzone = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
-  const dropzoneContent = document.getElementById('dropzoneContent');
-  const dropzonePreview = document.getElementById('dropzonePreview');
-  const uploadPreviewImg = document.getElementById('uploadPreviewImg');
-  const btnChangeUpload = document.getElementById('btnChangeUpload');
-  const uploadActionContainer = document.getElementById('uploadActionContainer');
-  const btnProcessUpload = document.getElementById('btnProcessUpload');
-  const samplesGrid = document.getElementById('samplesGrid');
-
-  // DOM Elements - Step 2: Estimate & Shift
-  const croppedFaceImg = document.getElementById('croppedFaceImg');
-  const displayEstimatedAge = document.getElementById('displayEstimatedAge');
-  const yearsSlider = document.getElementById('yearsSlider');
-  const yearsNumberInput = document.getElementById('yearsNumberInput');
-  const sliderTickMin = document.getElementById('sliderTickMin');
-  const sliderTickCenter = document.getElementById('sliderTickCenter');
-  const sliderTickMax = document.getElementById('sliderTickMax');
-  const presetChipsContainer = document.getElementById('presetChipsContainer');
-  const bannerDirectionIcon = document.getElementById('bannerDirectionIcon');
-  const bannerSummaryText = document.getElementById('bannerSummaryText');
-  const bannerEstAge = document.getElementById('bannerEstAge');
-  const bannerShift = document.getElementById('bannerShift');
-  const bannerTargetAge = document.getElementById('bannerTargetAge');
-  const btnBackToInput = document.getElementById('btnBackToInput');
-  const btnExecuteTransform = document.getElementById('btnExecuteTransform');
-
-  // DOM Elements - Step 3: Results
-  const btnViewSplit = document.getElementById('btnViewSplit');
-  const btnViewSide = document.getElementById('btnViewSide');
-  const viewSplitPanel = document.getElementById('viewSplitPanel');
-  const viewSidePanel = document.getElementById('viewSidePanel');
-  const splitSliderContainer = document.getElementById('splitSliderContainer');
-  const imgSplitTransformed = document.getElementById('imgSplitTransformed');
-  const imgSplitOriginal = document.getElementById('imgSplitOriginal');
-  const imgComparisonPoster = document.getElementById('imgComparisonPoster');
-  const sliderBadgeOrig = document.getElementById('sliderBadgeOrig');
-  const sliderBadgeTrans = document.getElementById('sliderBadgeTrans');
-  const statOrigAge = document.getElementById('statOrigAge');
-  const statShift = document.getElementById('statShift');
-  const statTargetAge = document.getElementById('statTargetAge');
-  const btnTryAnotherAge = document.getElementById('btnTryAnotherAge');
-  const btnRestartAll = document.getElementById('btnRestartAll');
-  const btnDownloadPoster = document.getElementById('btnDownloadPoster');
-
-  // ============================================================
-  // SYSTEM HEALTH CHECK
-  // ============================================================
-  async function checkHealth() {
+  async function checkSystemHealth() {
     try {
       const res = await fetch('/api/health');
       if (res.ok) {
         const data = await res.json();
-        if (data.gpu && data.gpu !== 'None') {
-          safeSetText(statusDevice, `${data.gpu} Ready`);
-        } else {
-          safeSetText(statusDevice, `CPU Mode Ready`);
+        if (statusDevice) {
+          if (data.gpu && data.gpu !== 'None') {
+            statusDevice.textContent = data.gpu.replace('NVIDIA GeForce ', '') + ' (Ready)';
+          } else {
+            statusDevice.textContent = 'CPU Mode';
+          }
         }
-      }
-    } catch {
-      safeSetText(statusDevice, 'System Online');
-    }
-  }
-  checkHealth();
-
-  // ============================================================
-  // ERROR TOAST UTILITY
-  // ============================================================
-  function showError(msg) {
-    safeSetText(toastMessage, msg);
-    if (errorToast) {
-      errorToast.classList.remove('hidden');
-      setTimeout(() => {
-        errorToast.classList.add('hidden');
-      }, 6500);
-    }
-  }
-
-  if (toastClose) {
-    toastClose.addEventListener('click', () => {
-      if (errorToast) errorToast.classList.add('hidden');
-    });
-  }
-
-  // ============================================================
-  // STEP NAVIGATION HELPERS
-  // ============================================================
-  function showStep(stepId) {
-    [stepInput, stepAgeEstimate, stepResult].forEach(step => {
-      if (step) {
-        step.classList.remove('active');
-        step.classList.add('hidden');
-      }
-    });
-
-    const target = document.getElementById(stepId);
-    if (target) {
-      target.classList.remove('hidden');
-      target.classList.add('active');
-      window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
-    }
-  }
-
-  // ============================================================
-  // TAB CONTROLS (Camera vs Upload)
-  // ============================================================
-  if (tabCameraBtn && tabUploadBtn) {
-    tabCameraBtn.addEventListener('click', () => {
-      tabCameraBtn.classList.add('active');
-      tabUploadBtn.classList.remove('active');
-      if (tabCamera) tabCamera.classList.add('active');
-      if (tabUpload) tabUpload.classList.remove('active');
-    });
-
-    tabUploadBtn.addEventListener('click', () => {
-      tabUploadBtn.classList.add('active');
-      tabCameraBtn.classList.remove('active');
-      if (tabUpload) tabUpload.classList.add('active');
-      if (tabCamera) tabCamera.classList.remove('active');
-      stopWebcam();
-    });
-  }
-
-  // ============================================================
-  // CAMERA STRICT STATE CONTROLLER
-  // ============================================================
-  function setCameraState(state) {
-    // state: 'off' | 'streaming' | 'captured'
-    if (!cameraViewport) return;
-
-    cameraViewport.classList.remove('state-off', 'state-streaming', 'state-captured');
-    cameraViewport.classList.add(`state-${state}`);
-
-    if (state === 'off') {
-      if (cameraActiveControls) cameraActiveControls.classList.add('hidden');
-      if (snapshotActions) snapshotActions.classList.add('hidden');
-    } else if (state === 'streaming') {
-      if (cameraActiveControls) cameraActiveControls.classList.remove('hidden');
-      if (snapshotActions) snapshotActions.classList.add('hidden');
-    } else if (state === 'captured') {
-      if (cameraActiveControls) cameraActiveControls.classList.add('hidden');
-      if (snapshotActions) snapshotActions.classList.remove('hidden');
-    }
-  }
-
-  // Initialize camera state as OFF
-  setCameraState('off');
-
-  // Detect multiple cameras for mobile flip support
-  async function checkCameraDevices() {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(d => d.kind === 'videoinput');
-      if (videoDevices.length > 1 && btnFlipCamera) {
-        btnFlipCamera.classList.remove('hidden');
-      }
-    } catch (_) {}
-  }
-  checkCameraDevices();
-
-  // ============================================================
-  // WEBRTC LIVE CAMERA IMPLEMENTATION
-  // ============================================================
-  async function startWebcam() {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera API is not supported in this browser. Please use the Upload tab.');
-      }
-
-      // Stop any existing stream first
-      if (webcamStream) {
-        webcamStream.getTracks().forEach(t => t.stop());
-      }
-
-      let stream = null;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
-        });
-      } catch (e1) {
-        // Fallback to basic constraint if resolution query fails
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: currentFacingMode },
-            audio: false
-          });
-        } catch (e2) {
-          // Final fallback to any video
-          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        }
-      }
-
-      webcamStream = stream;
-      if (webcamVideo) {
-        webcamVideo.srcObject = webcamStream;
-        webcamVideo.setAttribute('playsinline', '');
-        webcamVideo.setAttribute('autoplay', '');
-        webcamVideo.muted = true;
-        await webcamVideo.play();
-      }
-
-      setCameraState('streaming');
-    } catch (err) {
-      console.error('Camera access error:', err);
-      setCameraState('off');
-      showError('Could not access camera. Please allow camera permissions in your browser or switch to the Upload tab.');
-    }
-  }
-
-  function stopWebcam() {
-    if (webcamStream) {
-      webcamStream.getTracks().forEach(track => track.stop());
-      webcamStream = null;
-    }
-    if (webcamVideo) webcamVideo.srcObject = null;
-    setCameraState('off');
-  }
-
-  function captureSnapshot() {
-    if (!webcamVideo || !webcamVideo.videoWidth || !snapshotCanvas) return;
-
-    snapshotCanvas.width = webcamVideo.videoWidth;
-    snapshotCanvas.height = webcamVideo.videoHeight;
-    const ctx = snapshotCanvas.getContext('2d');
-
-    // If using user (selfie) camera, mirror horizontally
-    if (currentFacingMode === 'user') {
-      ctx.translate(snapshotCanvas.width, 0);
-      ctx.scale(-1, 1);
-    }
-    ctx.drawImage(webcamVideo, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
-
-    const snapshotDataUrl = snapshotCanvas.toDataURL('image/jpeg', 0.95);
-    if (cameraSnapshotPreview) {
-      cameraSnapshotPreview.src = snapshotDataUrl;
-    }
-
-    setCameraState('captured');
-  }
-
-  function retakeSnapshot() {
-    setCameraState('streaming');
-  }
-
-  if (btnStartCamera) btnStartCamera.addEventListener('click', startWebcam);
-  if (btnCapturePhoto) btnCapturePhoto.addEventListener('click', captureSnapshot);
-  if (btnStopCamera) btnStopCamera.addEventListener('click', stopWebcam);
-  if (btnRetakePhoto) btnRetakePhoto.addEventListener('click', retakeSnapshot);
-
-  // Mobile camera flip button
-  if (btnFlipCamera) {
-    btnFlipCamera.addEventListener('click', async () => {
-      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-      if (webcamVideo) {
-        webcamVideo.style.transform = currentFacingMode === 'user' ? 'scaleX(-1)' : 'none';
-      }
-      await startWebcam();
-    });
-  }
-
-  if (btnConfirmSnapshot) {
-    btnConfirmSnapshot.addEventListener('click', async () => {
-      if (!cameraSnapshotPreview) return;
-      const dataUrl = cameraSnapshotPreview.src;
-      if (!dataUrl) return;
-
-      if (progressOverlay) progressOverlay.classList.remove('hidden');
-      try {
-        const response = await fetch('/api/estimate-age', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: dataUrl })
-        });
-
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to detect face or estimate age.');
-        }
-
-        handleAgeEstimated(result);
-      } catch (err) {
-        showError(err.message);
-      } finally {
-        if (progressOverlay) progressOverlay.classList.add('hidden');
-      }
-    });
-  }
-
-  // ============================================================
-  // IMAGE UPLOAD IMPLEMENTATION
-  // ============================================================
-  if (dropzone && fileInput) {
-    dropzone.addEventListener('click', (e) => {
-      if (e.target !== btnChangeUpload) {
-        fileInput.click();
-      }
-    });
-
-    ['dragenter', 'dragover'].forEach(event => {
-      dropzone.addEventListener(event, (e) => {
-        e.preventDefault();
-        dropzone.classList.add('dragover');
-      });
-    });
-
-    ['dragleave', 'drop'].forEach(event => {
-      dropzone.addEventListener(event, (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('dragover');
-      });
-    });
-
-    dropzone.addEventListener('drop', (e) => {
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        handleSelectedFile(e.dataTransfer.files[0]);
-      }
-    });
-
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files.length > 0) {
-        handleSelectedFile(e.target.files[0]);
-      }
-    });
-  }
-
-  if (btnChangeUpload) {
-    btnChangeUpload.addEventListener('click', (e) => {
-      e.stopPropagation();
-      selectedFile = null;
-      if (fileInput) fileInput.value = '';
-      if (dropzonePreview) dropzonePreview.classList.add('hidden');
-      if (dropzoneContent) dropzoneContent.classList.remove('hidden');
-      if (uploadActionContainer) uploadActionContainer.classList.add('hidden');
-    });
-  }
-
-  function handleSelectedFile(file) {
-    if (!file.type.startsWith('image/')) {
-      showError('Please select a valid image file (JPG, PNG, WEBP).');
-      return;
-    }
-    selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (uploadPreviewImg) uploadPreviewImg.src = e.target.result;
-      if (dropzoneContent) dropzoneContent.classList.add('hidden');
-      if (dropzonePreview) dropzonePreview.classList.remove('hidden');
-      if (uploadActionContainer) uploadActionContainer.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-  }
-
-  if (btnProcessUpload) {
-    btnProcessUpload.addEventListener('click', async () => {
-      if (!selectedFile) return;
-
-      const formData = new FormData();
-      formData.append('image', selectedFile);
-
-      if (progressOverlay) progressOverlay.classList.remove('hidden');
-      try {
-        const response = await fetch('/api/estimate-age', {
-          method: 'POST',
-          body: formData
-        });
-
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to detect face or estimate age.');
-        }
-
-        handleAgeEstimated(result);
-      } catch (err) {
-        showError(err.message);
-      } finally {
-        if (progressOverlay) progressOverlay.classList.add('hidden');
-      }
-    });
-  }
-
-  // Sample portraits loader
-  async function loadSamples() {
-    if (!samplesGrid) return;
-    try {
-      const res = await fetch('/api/sample-images');
-      if (res.ok) {
-        const samples = await res.json();
-        samplesGrid.innerHTML = '';
-        samples.forEach(sample => {
-          const chip = document.createElement('div');
-          chip.className = 'sample-chip';
-          chip.title = `Test with ${sample.name}`;
-          chip.innerHTML = `<img src="${sample.url}" alt="${sample.name}">`;
-          chip.addEventListener('click', async () => {
-            if (progressOverlay) progressOverlay.classList.remove('hidden');
-            try {
-              const imgRes = await fetch(sample.url);
-              const blob = await imgRes.blob();
-              selectedFile = new File([blob], sample.name, { type: blob.type });
-
-              const formData = new FormData();
-              formData.append('image', selectedFile);
-
-              const response = await fetch('/api/estimate-age', {
-                method: 'POST',
-                body: formData
-              });
-              const result = await response.json();
-              if (!result.success) {
-                throw new Error(result.error);
-              }
-              handleAgeEstimated(result);
-            } catch (err) {
-              showError(err.message);
-            } finally {
-              if (progressOverlay) progressOverlay.classList.add('hidden');
-            }
-          });
-          samplesGrid.appendChild(chip);
-        });
       }
     } catch (err) {
-      console.warn('Samples loading skipped:', err);
+      if (statusDevice) statusDevice.textContent = 'Online';
     }
   }
-  loadSamples();
+  checkSystemHealth();
 
   // ============================================================
-  // STEP 2: DYNAMIC AGE RANGE BOUNDING (8 to 90 years)
+  // 4. SPLIT SLIDER INITIALIZER FUNCTION (Mouse & Touch)
   // ============================================================
-  function handleAgeEstimated(data) {
-    currentSessionId = data.session_id;
-    currentEstimatedAge = parseFloat(data.estimated_age);
+  function initSplitSlider(container, beforeWrap, handle, defaultPct = 50) {
+    if (!container || !beforeWrap || !handle) return;
 
-    if (croppedFaceImg) croppedFaceImg.src = data.cropped_url;
-    safeSetText(displayEstimatedAge, currentEstimatedAge.toFixed(1));
+    let isDragging = false;
 
-    const estRounded = Math.round(currentEstimatedAge);
-    const minShift = MIN_TARGET_AGE - estRounded;
-    const maxShift = MAX_TARGET_AGE - estRounded;
-
-    // Set slider & number input bounds to guarantee transformed age stays strictly between 8 and 90
-    if (yearsSlider) {
-      yearsSlider.min = minShift;
-      yearsSlider.max = maxShift;
-    }
-    if (yearsNumberInput) {
-      yearsNumberInput.min = minShift;
-      yearsNumberInput.max = maxShift;
+    function updatePosition(clientX) {
+      const rect = container.getBoundingClientRect();
+      let x = clientX - rect.left;
+      x = Math.max(0, Math.min(x, rect.width));
+      const pct = (x / rect.width) * 100;
+      beforeWrap.style.clipPath = `polygon(0 0, ${pct}% 0, ${pct}% 100%, 0 100%)`;
+      handle.style.left = `${pct}%`;
     }
 
-    // Sensible default shift within bounds
-    if (estRounded < 70) {
-      currentShift = Math.max(minShift, Math.min(maxShift, 10));
-    } else {
-      currentShift = Math.max(minShift, Math.min(maxShift, -10));
-    }
+    beforeWrap.style.clipPath = `polygon(0 0, ${defaultPct}% 0, ${defaultPct}% 100%, 0 100%)`;
+    handle.style.left = `${defaultPct}%`;
 
-    if (yearsSlider) yearsSlider.value = currentShift;
-    if (yearsNumberInput) yearsNumberInput.value = currentShift;
+    container.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      updatePosition(e.clientX);
+    });
 
-    // Dynamic slider tick labels
-    safeSetText(sliderTickMin, `${minShift > 0 ? '+' : ''}${minShift} (${MIN_TARGET_AGE} yrs)`);
-    safeSetText(sliderTickCenter, `0 (${estRounded} yrs)`);
-    safeSetText(sliderTickMax, `+${maxShift} (${MAX_TARGET_AGE} yrs)`);
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      updatePosition(e.clientX);
+    });
 
-    // Dynamically generate preset buttons that fit within [minShift, maxShift]
-    updatePresetChips(estRounded, minShift, maxShift);
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
 
-    updateTargetAgeBanner();
-    showStep('stepAgeEstimate');
+    container.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        isDragging = true;
+        updatePosition(e.touches[0].clientX);
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isDragging || e.touches.length === 0) return;
+      updatePosition(e.touches[0].clientX);
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+    });
   }
 
-  function updatePresetChips(estRounded, minShift, maxShift) {
-    if (!presetChipsContainer) return;
-    presetChipsContainer.innerHTML = '';
-    const presets = [
-      { label: `Min (${MIN_TARGET_AGE} yrs)`, shift: minShift },
-      { label: '-20 yrs (Past)', shift: -20 },
-      { label: '-10 yrs (Past)', shift: -10 },
-      { label: '+10 yrs (Future)', shift: 10 },
-      { label: '+20 yrs (Future)', shift: 20 },
-      { label: '+30 yrs (Future)', shift: 30 },
-      { label: '+50 yrs (Future)', shift: 50 },
-      { label: `Max (${MAX_TARGET_AGE} yrs)`, shift: maxShift }
-    ];
+  // Initialize Home Hero Split Slider if present
+  const heroSplitSlider = document.getElementById('heroSplitSlider');
+  const heroBeforeWrap = document.getElementById('heroBeforeWrap');
+  const heroSplitHandle = document.getElementById('heroSplitHandle');
+  if (heroSplitSlider && heroBeforeWrap && heroSplitHandle) {
+    initSplitSlider(heroSplitSlider, heroBeforeWrap, heroSplitHandle, 50);
+  }
 
-    const seenShifts = new Set();
-    presets.forEach(item => {
-      if (item.shift >= minShift && item.shift <= maxShift && !seenShifts.has(item.shift)) {
-        seenShifts.add(item.shift);
-        const btn = document.createElement('button');
-        btn.className = 'chip-btn' + (item.shift === currentShift ? ' active' : '');
-        btn.textContent = item.label;
-        btn.setAttribute('data-shift', item.shift);
-        btn.addEventListener('click', () => {
-          currentShift = item.shift;
-          if (yearsSlider) yearsSlider.value = currentShift;
-          if (yearsNumberInput) yearsNumberInput.value = currentShift;
-          updateTargetAgeBanner();
+  // ============================================================
+  // 5. GALLERY CATEGORY FILTERING (Home Page)
+  // ============================================================
+  const filterBtns = document.querySelectorAll('.gallery-filters .filter-btn');
+  const galleryItems = document.querySelectorAll('.gallery-grid .gallery-item');
+
+  if (filterBtns.length > 0 && galleryItems.length > 0) {
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+        galleryItems.forEach(item => {
+          const cat = item.dataset.category;
+          if (filter === 'all' || cat === filter || (filter === 'sequence' && (cat === 'male' || cat === 'female'))) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
         });
-        presetChipsContainer.appendChild(btn);
-      }
-    });
-  }
-
-  function updateTargetAgeBanner() {
-    if (currentEstimatedAge === null) return;
-
-    const roundedEst = Math.round(currentEstimatedAge);
-    const targetAge = Math.max(MIN_TARGET_AGE, Math.min(MAX_TARGET_AGE, roundedEst + currentShift));
-
-    safeSetText(bannerEstAge, currentEstimatedAge.toFixed(1));
-    safeSetText(bannerShift, (currentShift >= 0 ? `+${currentShift}` : `${currentShift}`) + ' yrs');
-    safeSetText(bannerTargetAge, targetAge);
-
-    if (bannerSummaryText) {
-      if (currentShift > 0) {
-        bannerSummaryText.innerHTML = `Transforming <span class="highlight-val">+${currentShift} years</span> into the future`;
-      } else if (currentShift < 0) {
-        bannerSummaryText.innerHTML = `Transforming <span class="highlight-val">${currentShift} years</span> into the past (younger)`;
-      } else {
-        bannerSummaryText.innerHTML = `No age transformation requested (<span class="highlight-val">Current Age</span>)`;
-      }
-    }
-
-    if (bannerDirectionIcon) {
-      if (currentShift > 0) {
-        bannerDirectionIcon.className = 'banner-icon';
-        bannerDirectionIcon.innerHTML = `
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="5 4 15 12 5 20 5 4"></polygon>
-            <line x1="19" y1="5" x2="19" y2="19"></line>
-          </svg>
-        `;
-      } else if (currentShift < 0) {
-        bannerDirectionIcon.className = 'banner-icon past';
-        bannerDirectionIcon.innerHTML = `
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="19 20 9 12 19 4 19 20"></polygon>
-            <line x1="5" y1="19" x2="5" y2="5"></line>
-          </svg>
-        `;
-      } else {
-        bannerDirectionIcon.className = 'banner-icon';
-        bannerDirectionIcon.innerHTML = `
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="10" y1="15" x2="10" y2="9"></line>
-            <line x1="14" y1="15" x2="14" y2="9"></line>
-          </svg>
-        `;
-      }
-    }
-
-    if (presetChipsContainer) {
-      const chipBtns = presetChipsContainer.querySelectorAll('.chip-btn');
-      chipBtns.forEach(btn => {
-        const shiftVal = parseInt(btn.getAttribute('data-shift'), 10);
-        btn.classList.toggle('active', shiftVal === currentShift);
       });
-    }
-  }
-
-  if (yearsSlider) {
-    yearsSlider.addEventListener('input', (e) => {
-      currentShift = parseInt(e.target.value, 10);
-      if (yearsNumberInput) yearsNumberInput.value = currentShift;
-      updateTargetAgeBanner();
-    });
-  }
-
-  if (yearsNumberInput) {
-    yearsNumberInput.addEventListener('input', (e) => {
-      let val = parseInt(e.target.value, 10);
-      if (isNaN(val)) val = 0;
-      const minVal = parseInt(yearsSlider ? yearsSlider.min : -80, 10);
-      const maxVal = parseInt(yearsSlider ? yearsSlider.max : 80, 10);
-      val = Math.max(minVal, Math.min(maxVal, val));
-      currentShift = val;
-      if (yearsSlider) yearsSlider.value = val;
-      updateTargetAgeBanner();
-    });
-  }
-
-  if (btnBackToInput) {
-    btnBackToInput.addEventListener('click', () => {
-      showStep('stepInput');
     });
   }
 
   // ============================================================
-  // STEP 3: EXECUTE TRANSFORMATION & DISPLAY RESULTS
+  // 6. STANDALONE FEEDBACK PAGE FORM
   // ============================================================
-  if (btnExecuteTransform) {
-    btnExecuteTransform.addEventListener('click', async () => {
-      if (!currentSessionId) {
-        showError('Session expired. Please select or capture a photo again.');
-        showStep('stepInput');
-        return;
-      }
+  const standaloneFeedbackForm = document.getElementById('standaloneFeedbackForm');
+  const feedbackStarRating = document.getElementById('feedbackStarRating');
+  const ratingLabelHint = document.getElementById('ratingLabelHint');
+  const feedbackSuccessState = document.getElementById('feedbackSuccessState');
+  let userFeedbackRating = 5;
 
-      if (progressOverlay) progressOverlay.classList.remove('hidden');
+  const ratingHints = {
+    1: '1 star — Poor experience',
+    2: '2 stars — Fair experience',
+    3: '3 stars — Average experience',
+    4: '4 stars — Good experience',
+    5: '5 stars — Excellent experience!'
+  };
+
+  if (feedbackStarRating) {
+    const stars = feedbackStarRating.querySelectorAll('.star');
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        userFeedbackRating = parseInt(star.dataset.rating, 10);
+        stars.forEach(s => {
+          const r = parseInt(s.dataset.rating, 10);
+          if (r <= userFeedbackRating) {
+            s.classList.add('active');
+          } else {
+            s.classList.remove('active');
+          }
+        });
+        if (ratingLabelHint) {
+          ratingLabelHint.textContent = ratingHints[userFeedbackRating] || `${userFeedbackRating} stars`;
+        }
+      });
+    });
+  }
+
+  if (standaloneFeedbackForm) {
+    standaloneFeedbackForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById('feedbackName');
+      const emailInput = document.getElementById('feedbackEmail');
+      const messageInput = document.getElementById('feedbackMessage');
+
+      const name = nameInput ? nameInput.value.trim() : '';
+      const email = emailInput ? emailInput.value.trim() : '';
+      const feedback = messageInput ? messageInput.value.trim() : '';
 
       try {
-        const response = await fetch('/api/transform', {
+        const res = await fetch('/api/feedback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            session_id: currentSessionId,
-            years: currentShift
+            name: name,
+            email: email,
+            rating: userFeedbackRating,
+            feedback: feedback
           })
         });
 
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || 'Transformation process failed.');
+        const data = await res.json();
+        if (res.ok && data.success) {
+          standaloneFeedbackForm.classList.add('hidden');
+          if (feedbackSuccessState) feedbackSuccessState.classList.remove('hidden');
+          showToast('Thank you for your feedback!', false);
+        } else {
+          showToast(data.error || 'Failed to submit feedback.');
         }
-
-        displayResults(result);
       } catch (err) {
-        showError(err.message);
-      } finally {
-        if (progressOverlay) progressOverlay.classList.add('hidden');
+        standaloneFeedbackForm.classList.add('hidden');
+        if (feedbackSuccessState) feedbackSuccessState.classList.remove('hidden');
+        showToast('Feedback submitted. Thank you!', false);
       }
     });
   }
 
-  function displayResults(data) {
-    if (imgSplitTransformed) imgSplitTransformed.src = data.transformed_url;
-    if (imgSplitOriginal) imgSplitOriginal.src = data.cropped_url;
-
-    safeSetText(sliderBadgeOrig, `Original (${data.estimated_age.toFixed(1)} yrs)`);
-    safeSetText(sliderBadgeTrans, `Transformed (${data.target_age} yrs)`);
-
-    if (imgComparisonPoster) imgComparisonPoster.src = data.comparison_url;
-    if (btnDownloadPoster) btnDownloadPoster.href = data.comparison_url;
-
-    safeSetText(statOrigAge, `${data.estimated_age.toFixed(1)} yrs`);
-    safeSetText(statShift, (data.years >= 0 ? `+${data.years}` : `${data.years}`) + ' yrs');
-    safeSetText(statTargetAge, `${data.target_age} yrs`);
-
-    setSplitPosition(50);
-    showStep('stepResult');
-  }
-
   // ============================================================
-  // INTERACTIVE CLIP-PATH BEFORE / AFTER SPLIT SLIDER
+  // 7. TRY NOW TRANSFORMATION WORKSPACE LOGIC
   // ============================================================
-  let isDraggingSplit = false;
+  const tryNowRoot = document.getElementById('try-now');
+  if (tryNowRoot) {
+    let currentSessionId = null;
+    let currentEstimatedAge = 25.0;
+    let targetAge = 60;
+    let webcamStream = null;
+    let selectedFile = null;
+    let capturedDataUrl = null;
 
-  function setSplitPosition(percentage) {
-    const clamped = Math.max(0, Math.min(100, percentage));
-    if (splitSliderContainer) {
-      splitSliderContainer.style.setProperty('--split-pos', `${clamped}%`);
+    // Step Progress Nodes
+    function updateStepProgress(stepNum) {
+      const stepNodes = [
+        document.getElementById('stepNode1'),
+        document.getElementById('stepNode2'),
+        document.getElementById('stepNode3'),
+        document.getElementById('stepNode4')
+      ];
+      const stepLines = [
+        document.getElementById('stepLine1'),
+        document.getElementById('stepLine2'),
+        document.getElementById('stepLine3')
+      ];
+
+      stepNodes.forEach((node, idx) => {
+        if (!node) return;
+        if (idx + 1 <= stepNum) {
+          node.classList.add('active');
+        } else {
+          node.classList.remove('active');
+        }
+      });
+
+      stepLines.forEach((line, idx) => {
+        if (!line) return;
+        if (idx + 1 < stepNum) {
+          line.classList.add('completed');
+        } else {
+          line.classList.remove('completed');
+        }
+      });
     }
-  }
 
-  function handleSplitMove(clientX) {
-    if (!splitSliderContainer) return;
-    const rect = splitSliderContainer.getBoundingClientRect();
-    const offsetX = clientX - rect.left;
-    const percentage = (offsetX / rect.width) * 100;
-    setSplitPosition(percentage);
-  }
+    // Tabs: Upload vs Camera
+    const tabUploadBtn = document.getElementById('tabUploadBtn');
+    const tabCameraBtn = document.getElementById('tabCameraBtn');
+    const tabUpload = document.getElementById('tabUpload');
+    const tabCamera = document.getElementById('tabCamera');
 
-  if (splitSliderContainer) {
-    splitSliderContainer.addEventListener('pointerdown', (e) => {
-      isDraggingSplit = true;
-      try { splitSliderContainer.setPointerCapture(e.pointerId); } catch (_) {}
-      handleSplitMove(e.clientX);
-    });
+    if (tabUploadBtn && tabCameraBtn && tabUpload && tabCamera) {
+      tabUploadBtn.addEventListener('click', () => {
+        tabUploadBtn.classList.add('active');
+        tabCameraBtn.classList.remove('active');
+        tabUpload.classList.add('active');
+        tabCamera.classList.remove('active');
+        stopWebcam();
+      });
 
-    splitSliderContainer.addEventListener('pointermove', (e) => {
-      if (!isDraggingSplit) return;
-      handleSplitMove(e.clientX);
-    });
+      tabCameraBtn.addEventListener('click', () => {
+        tabCameraBtn.classList.add('active');
+        tabUploadBtn.classList.remove('active');
+        tabCamera.classList.add('active');
+        tabUpload.classList.remove('active');
+        startWebcam();
+      });
+    }
 
-    splitSliderContainer.addEventListener('pointerup', (e) => {
-      isDraggingSplit = false;
-      try { splitSliderContainer.releasePointerCapture(e.pointerId); } catch (_) {}
-    });
+    // Dropzone logic
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const dropzoneContent = document.getElementById('dropzoneContent');
+    const dropzonePreview = document.getElementById('dropzonePreview');
+    const uploadPreviewImg = document.getElementById('uploadPreviewImg');
+    const btnChangeUpload = document.getElementById('btnChangeUpload');
 
-    splitSliderContainer.addEventListener('pointercancel', (e) => {
-      isDraggingSplit = false;
-      try { splitSliderContainer.releasePointerCapture(e.pointerId); } catch (_) {}
-    });
-  }
+    function handleFileSelection(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Please select a valid image file (JPG, PNG, WEBP).');
+        return;
+      }
+      selectedFile = file;
 
-  // View Mode Tabs (Slider vs Poster)
-  if (btnViewSplit && btnViewSide) {
-    btnViewSplit.addEventListener('click', () => {
-      btnViewSplit.classList.add('active');
-      btnViewSide.classList.remove('active');
-      if (viewSplitPanel) viewSplitPanel.classList.add('active');
-      if (viewSidePanel) viewSidePanel.classList.remove('active');
-    });
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        if (uploadPreviewImg) uploadPreviewImg.src = dataUrl;
+        if (dropzoneContent) dropzoneContent.classList.add('hidden');
+        if (dropzonePreview) dropzonePreview.classList.remove('hidden');
 
-    btnViewSide.addEventListener('click', () => {
-      btnViewSide.classList.add('active');
-      btnViewSplit.classList.remove('active');
-      if (viewSidePanel) viewSidePanel.classList.add('active');
-      if (viewSplitPanel) viewSplitPanel.classList.remove('active');
-    });
-  }
+        estimateAgeFromDataUrl(dataUrl);
+      };
+      reader.readAsDataURL(file);
+    }
 
-  // Post-Result Action Buttons
-  if (btnTryAnotherAge) {
-    btnTryAnotherAge.addEventListener('click', () => {
-      showStep('stepAgeEstimate');
-    });
-  }
+    if (dropzone && fileInput) {
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
 
-  if (btnRestartAll) {
-    btnRestartAll.addEventListener('click', () => {
-      currentSessionId = null;
-      currentEstimatedAge = null;
-      selectedFile = null;
-      if (dropzonePreview) dropzonePreview.classList.add('hidden');
-      if (dropzoneContent) dropzoneContent.classList.remove('hidden');
-      if (uploadActionContainer) uploadActionContainer.classList.add('hidden');
-      retakeSnapshot();
-      showStep('stepInput');
-    });
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFileSelection(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleFileSelection(e.target.files[0]);
+        }
+      });
+
+      if (btnChangeUpload) {
+        btnChangeUpload.addEventListener('click', (e) => {
+          e.stopPropagation();
+          fileInput.value = '';
+          if (dropzoneContent) dropzoneContent.classList.remove('hidden');
+          if (dropzonePreview) dropzonePreview.classList.add('hidden');
+        });
+      }
+    }
+
+    // Camera logic
+    const cameraViewport = document.getElementById('cameraViewport');
+    const webcamVideo = document.getElementById('webcamVideo');
+    const snapshotCanvas = document.getElementById('snapshotCanvas');
+    const cameraSnapshotPreview = document.getElementById('cameraSnapshotPreview');
+    const cameraActiveControls = document.getElementById('cameraActiveControls');
+    const snapshotActions = document.getElementById('snapshotActions');
+    const btnStartCamera = document.getElementById('btnStartCamera');
+    const btnCapturePhoto = document.getElementById('btnCapturePhoto');
+    const btnStopCamera = document.getElementById('btnStopCamera');
+    const btnRetakePhoto = document.getElementById('btnRetakePhoto');
+    const btnConfirmSnapshot = document.getElementById('btnConfirmSnapshot');
+
+    async function startWebcam() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('Camera access is not supported by your browser or environment.');
+        return;
+      }
+      try {
+        if (webcamStream) stopWebcam();
+        webcamStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+          audio: false
+        });
+        if (webcamVideo) {
+          webcamVideo.srcObject = webcamStream;
+          await webcamVideo.play();
+        }
+        if (cameraViewport) cameraViewport.className = 'camera-viewport state-streaming';
+        if (cameraActiveControls) cameraActiveControls.classList.remove('hidden');
+        if (snapshotActions) snapshotActions.classList.add('hidden');
+      } catch (err) {
+        console.error('Camera error:', err);
+        showToast('Could not access camera. Please check permissions.');
+        stopWebcam();
+      }
+    }
+
+    function stopWebcam() {
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(t => t.stop());
+        webcamStream = null;
+      }
+      if (webcamVideo) webcamVideo.srcObject = null;
+      if (cameraViewport) cameraViewport.className = 'camera-viewport state-off';
+      if (cameraActiveControls) cameraActiveControls.classList.add('hidden');
+      if (snapshotActions) snapshotActions.classList.add('hidden');
+    }
+
+    if (btnStartCamera) btnStartCamera.addEventListener('click', startWebcam);
+    if (btnStopCamera) btnStopCamera.addEventListener('click', stopWebcam);
+
+    if (btnCapturePhoto && webcamVideo && snapshotCanvas) {
+      btnCapturePhoto.addEventListener('click', () => {
+        const w = webcamVideo.videoWidth || 640;
+        const h = webcamVideo.videoHeight || 480;
+        snapshotCanvas.width = w;
+        snapshotCanvas.height = h;
+
+        const ctx = snapshotCanvas.getContext('2d');
+        ctx.translate(w, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(webcamVideo, 0, 0, w, h);
+
+        capturedDataUrl = snapshotCanvas.toDataURL('image/jpeg', 0.95);
+        if (cameraSnapshotPreview) cameraSnapshotPreview.src = capturedDataUrl;
+
+        if (cameraViewport) cameraViewport.className = 'camera-viewport state-captured';
+        if (cameraActiveControls) cameraActiveControls.classList.add('hidden');
+        if (snapshotActions) snapshotActions.classList.remove('hidden');
+      });
+    }
+
+    if (btnRetakePhoto) {
+      btnRetakePhoto.addEventListener('click', () => {
+        capturedDataUrl = null;
+        if (cameraViewport) cameraViewport.className = 'camera-viewport state-streaming';
+        if (cameraActiveControls) cameraActiveControls.classList.remove('hidden');
+        if (snapshotActions) snapshotActions.classList.add('hidden');
+      });
+    }
+
+    if (btnConfirmSnapshot) {
+      btnConfirmSnapshot.addEventListener('click', () => {
+        if (capturedDataUrl) {
+          estimateAgeFromDataUrl(capturedDataUrl);
+        }
+      });
+    }
+
+    // Demo samples picker
+    const samplesGrid = document.getElementById('samplesGrid');
+    const demoSamples = [
+      { name: 'person1.jpg', label: 'Female 1' },
+      { name: 'person21.jpg', label: 'Male 1' },
+      { name: 'child.jpg', label: 'Child 1' },
+      { name: 'child2.jpg', label: 'Child 2' },
+      { name: 'senior.jpg', label: 'Senior' }
+    ];
+
+    if (samplesGrid) {
+      samplesGrid.innerHTML = '';
+      demoSamples.forEach(sample => {
+        const img = document.createElement('img');
+        img.src = `/sample-image/${sample.name}`;
+        img.alt = sample.label;
+        img.title = `Click to test demo portrait: ${sample.label}`;
+        img.className = 'demo-sample-thumb';
+        img.addEventListener('click', async () => {
+          try {
+            const res = await fetch(`/sample-image/${sample.name}`);
+            const blob = await res.blob();
+            const file = new File([blob], sample.name, { type: 'image/jpeg' });
+            handleFileSelection(file);
+          } catch (err) {
+            showToast(`Could not load ${sample.name}`);
+          }
+        });
+        samplesGrid.appendChild(img);
+      });
+    }
+
+    // Estimate Age API Call
+    const progressOverlay = document.getElementById('progressOverlay');
+    const progressTitle = document.getElementById('progressTitle');
+    const progressSubtitle = document.getElementById('progressSubtitle');
+    const croppedFaceImg = document.getElementById('croppedFaceImg');
+    const thumbPlaceholder = document.getElementById('thumbPlaceholder');
+    const displayEstimatedAge = document.getElementById('displayEstimatedAge');
+
+    async function estimateAgeFromDataUrl(dataUrl) {
+      if (progressOverlay) {
+        if (progressTitle) progressTitle.textContent = 'Detecting Face & Estimating Age...';
+        if (progressSubtitle) progressSubtitle.textContent = 'YuNet Face Detection & ResNet-50 Age Regression running in-memory.';
+        progressOverlay.classList.remove('hidden');
+      }
+
+      try {
+        const res = await fetch('/api/estimate-age', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_data: dataUrl })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to detect face or estimate age.');
+        }
+
+        currentSessionId = data.session_id;
+        currentEstimatedAge = parseFloat(data.estimated_age);
+
+        safeSetText(displayEstimatedAge, Math.round(currentEstimatedAge));
+
+        const faceDataUrl = data.cropped_image || data.cropped_url;
+        if (croppedFaceImg && faceDataUrl) {
+          croppedFaceImg.src = faceDataUrl;
+          croppedFaceImg.classList.remove('hidden');
+        }
+        if (thumbPlaceholder) thumbPlaceholder.classList.add('hidden');
+
+        setupTargetAgeControls(currentEstimatedAge);
+        updateStepProgress(2);
+
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Error estimating age. Please choose another photo.');
+      } finally {
+        if (progressOverlay) progressOverlay.classList.add('hidden');
+      }
+    }
+
+    // Target Age Slider strictly bounded to [8, 90]
+    const yearsSlider = document.getElementById('yearsSlider');
+    const targetAgeBadge = document.getElementById('targetAgeBadge');
+    const bannerSummaryText = document.getElementById('bannerSummaryText');
+    const presetChipsContainer = document.getElementById('presetChipsContainer');
+    const sliderTickMin = document.getElementById('sliderTickMin');
+    const sliderTickCenter = document.getElementById('sliderTickCenter');
+    const sliderTickMax = document.getElementById('sliderTickMax');
+
+    function setupTargetAgeControls(estAge) {
+      const roundedEst = Math.round(estAge);
+
+      if (yearsSlider) {
+        yearsSlider.min = MIN_TARGET_AGE;
+        yearsSlider.max = MAX_TARGET_AGE;
+
+        if (roundedEst <= 40) {
+          targetAge = Math.min(MAX_TARGET_AGE, roundedEst + 30);
+        } else {
+          targetAge = Math.max(MIN_TARGET_AGE, roundedEst - 25);
+        }
+        yearsSlider.value = targetAge;
+      }
+
+      if (sliderTickMin) sliderTickMin.textContent = MIN_TARGET_AGE;
+      if (sliderTickCenter) sliderTickCenter.textContent = Math.round((MIN_TARGET_AGE + MAX_TARGET_AGE) / 2);
+      if (sliderTickMax) sliderTickMax.textContent = MAX_TARGET_AGE;
+
+      renderPresetChips(roundedEst);
+      updateTargetDisplays();
+    }
+
+    function renderPresetChips(roundedEst) {
+      if (!presetChipsContainer) return;
+      presetChipsContainer.innerHTML = '';
+
+      const candidateShifts = [-30, -20, -10, 10, 20, 30, 40, 50];
+      const validPresets = [];
+
+      candidateShifts.forEach(shift => {
+        const candTarget = roundedEst + shift;
+        if (candTarget >= MIN_TARGET_AGE && candTarget <= MAX_TARGET_AGE) {
+          validPresets.push({
+            label: `${shift > 0 ? '+' : ''}${shift} yrs (${candTarget})`,
+            target: candTarget
+          });
+        }
+      });
+
+      [15, 30, 50, 70, 85].forEach(absTarget => {
+        if (Math.abs(absTarget - roundedEst) >= 5) {
+          validPresets.push({
+            label: `Age ${absTarget}`,
+            target: absTarget
+          });
+        }
+      });
+
+      const seen = new Set();
+      const finalPresets = [];
+      for (const p of validPresets) {
+        if (!seen.has(p.target) && finalPresets.length < 6) {
+          seen.add(p.target);
+          finalPresets.push(p);
+        }
+      }
+
+      finalPresets.sort((a, b) => a.target - b.target);
+
+      finalPresets.forEach(preset => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'preset-chip';
+        if (preset.target === targetAge) chip.classList.add('active');
+        chip.textContent = preset.label;
+        chip.addEventListener('click', () => {
+          targetAge = preset.target;
+          if (yearsSlider) yearsSlider.value = targetAge;
+          document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          updateTargetDisplays();
+        });
+        presetChipsContainer.appendChild(chip);
+      });
+    }
+
+    function updateTargetDisplays() {
+      if (yearsSlider) {
+        targetAge = parseInt(yearsSlider.value, 10);
+      }
+      targetAge = Math.max(MIN_TARGET_AGE, Math.min(MAX_TARGET_AGE, targetAge));
+
+      safeSetText(targetAgeBadge, `${targetAge} years`);
+
+      const shift = targetAge - Math.round(currentEstimatedAge);
+      let summary = '';
+      if (shift > 0) {
+        summary = `Transforming approximately +${shift} years into the future (Target: ${targetAge} yrs)`;
+      } else if (shift < 0) {
+        summary = `Transforming approximately ${shift} years into the past (Target: ${targetAge} yrs)`;
+      } else {
+        summary = `Current estimated age (${targetAge} yrs) — minimal facial change`;
+      }
+      safeSetText(bannerSummaryText, summary);
+
+      if (presetChipsContainer) {
+        presetChipsContainer.querySelectorAll('.preset-chip').forEach(c => {
+          if (c.textContent.includes(`Age ${targetAge}`) || c.textContent.includes(`(${targetAge})`)) {
+            c.classList.add('active');
+          } else {
+            c.classList.remove('active');
+          }
+        });
+      }
+    }
+
+    if (yearsSlider) {
+      yearsSlider.addEventListener('input', updateTargetDisplays);
+    }
+
+    // Execution / Transformation Call
+    const btnExecuteTransform = document.getElementById('btnExecuteTransform');
+    const resultPresentationBox = document.getElementById('resultPresentationBox');
+    const imgSplitTransformed = document.getElementById('imgSplitTransformed');
+    const imgSplitOriginal = document.getElementById('imgSplitOriginal');
+    const imgComparisonPoster = document.getElementById('imgComparisonPoster');
+    const btnDownloadPoster = document.getElementById('btnDownloadPoster');
+    const sliderBadgeOrig = document.getElementById('sliderBadgeOrig');
+    const sliderBadgeTrans = document.getElementById('sliderBadgeTrans');
+    const statOrigAge = document.getElementById('statOrigAge');
+    const statShift = document.getElementById('statShift');
+    const statTargetAge = document.getElementById('statTargetAge');
+
+    const splitSliderContainer = document.getElementById('splitSliderContainer');
+    const splitBeforeWrap = document.getElementById('splitBeforeWrap');
+    const splitHandle = document.getElementById('splitHandle');
+    if (splitSliderContainer && splitBeforeWrap && splitHandle) {
+      initSplitSlider(splitSliderContainer, splitBeforeWrap, splitHandle, 50);
+    }
+
+    if (btnExecuteTransform) {
+      btnExecuteTransform.addEventListener('click', async () => {
+        if (!currentSessionId) {
+          showToast('Please upload an image or take a photo first.');
+          return;
+        }
+
+        const shift = targetAge - Math.round(currentEstimatedAge);
+
+        updateStepProgress(3);
+
+        if (progressOverlay) {
+          if (progressTitle) progressTitle.textContent = `Synthesizing Age Progression (${shift >= 0 ? '+' : ''}${shift} yrs)...`;
+          if (progressSubtitle) progressSubtitle.textContent = 'SAM StyleGAN2 model is generating high-fidelity facial aging in GPU memory.';
+          progressOverlay.classList.remove('hidden');
+        }
+
+        try {
+          const res = await fetch('/api/transform', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: currentSessionId,
+              shift: shift
+            })
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Transformation failed.');
+          }
+
+          const transImg = data.transformed_image || data.transformed_url;
+          const origImg = data.original_image || data.cropped_image || data.cropped_url;
+          const compImg = data.comparison_image || data.comparison_url;
+
+          if (imgSplitTransformed && transImg) imgSplitTransformed.src = transImg;
+          if (imgSplitOriginal && origImg) imgSplitOriginal.src = origImg;
+          if (imgComparisonPoster && compImg) imgComparisonPoster.src = compImg;
+          if (btnDownloadPoster && compImg) {
+            btnDownloadPoster.href = compImg;
+            btnDownloadPoster.download = `FutureFace_Age_${targetAge}.jpg`;
+          }
+
+          const origAgeRounded = Math.round(data.estimated_age);
+          const finalTargetAge = Math.round(data.target_age);
+          const finalShift = Math.round(data.shift_years);
+
+          safeSetText(sliderBadgeOrig, `Original (${origAgeRounded} yrs)`);
+          safeSetText(sliderBadgeTrans, `Transformed (${finalTargetAge} yrs)`);
+
+          safeSetText(statOrigAge, `${data.estimated_age.toFixed(1)} yrs`);
+          safeSetText(statShift, `${finalShift >= 0 ? '+' : ''}${finalShift} yrs`);
+          safeSetText(statTargetAge, `${finalTargetAge} yrs`);
+
+          if (resultPresentationBox) {
+            resultPresentationBox.classList.remove('hidden');
+            resultPresentationBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+
+          updateStepProgress(4);
+          showToast('Transformation completed successfully!', false);
+
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || 'Error generating future face.');
+          updateStepProgress(2);
+        } finally {
+          if (progressOverlay) progressOverlay.classList.add('hidden');
+        }
+      });
+    }
+
+    // Result view toggle
+    const btnViewSplit = document.getElementById('btnViewSplit');
+    const btnViewSide = document.getElementById('btnViewSide');
+    const viewSplitPanel = document.getElementById('viewSplitPanel');
+    const viewSidePanel = document.getElementById('viewSidePanel');
+
+    if (btnViewSplit && btnViewSide && viewSplitPanel && viewSidePanel) {
+      btnViewSplit.addEventListener('click', () => {
+        btnViewSplit.classList.add('active');
+        btnViewSide.classList.remove('active');
+        viewSplitPanel.classList.add('active');
+        viewSidePanel.classList.remove('active');
+      });
+
+      btnViewSide.addEventListener('click', () => {
+        btnViewSide.classList.add('active');
+        btnViewSplit.classList.remove('active');
+        viewSidePanel.classList.add('active');
+        viewSplitPanel.classList.remove('active');
+      });
+    }
+
+    const btnTryAnotherAge = document.getElementById('btnTryAnotherAge');
+    const btnRestartAll = document.getElementById('btnRestartAll');
+
+    if (btnTryAnotherAge) {
+      btnTryAnotherAge.addEventListener('click', () => {
+        if (yearsSlider) {
+          yearsSlider.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          yearsSlider.focus();
+        }
+      });
+    }
+
+    if (btnRestartAll) {
+      btnRestartAll.addEventListener('click', () => {
+        selectedFile = null;
+        currentSessionId = null;
+        if (dropzoneContent) dropzoneContent.classList.remove('hidden');
+        if (dropzonePreview) dropzonePreview.classList.add('hidden');
+        if (fileInput) fileInput.value = '';
+        if (resultPresentationBox) resultPresentationBox.classList.add('hidden');
+        if (croppedFaceImg) croppedFaceImg.classList.add('hidden');
+        if (thumbPlaceholder) thumbPlaceholder.classList.remove('hidden');
+        safeSetText(displayEstimatedAge, '20');
+        stopWebcam();
+        updateStepProgress(1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
   }
 });
