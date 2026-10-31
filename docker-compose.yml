@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  future-face:
+    build: .
+    container_name: future-face-app
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - WEB_CONCURRENCY=1
+      - GUNICORN_TIMEOUT=300
+    restart: unless-stopped

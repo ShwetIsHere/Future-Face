@@ -33,9 +33,10 @@ def run():
 	opts.update(vars(test_opts))
 	opts = Namespace(**opts)
 
+	device = "cuda" if torch.cuda.is_available() else "cpu"
 	net = pSp(opts)
 	net.eval()
-	net.cuda()
+	net.to(device)
 
 	age_transformers = [AgeTransformer(target_age=age) for age in opts.target_age.split(',')]
 
@@ -62,9 +63,9 @@ def run():
 			if global_i >= opts.n_images:
 				break
 			with torch.no_grad():
-				input_age_batch = [age_transformer(img.cpu()).to('cuda') for img in input_batch]
+				input_age_batch = [age_transformer(img.cpu()).to(device) for img in input_batch]
 				input_age_batch = torch.stack(input_age_batch)
-				input_cuda = input_age_batch.cuda().float()
+				input_cuda = input_age_batch.to(device).float()
 				tic = time.time()
 				result_batch = run_on_batch(input_cuda, net, opts)
 				toc = time.time()

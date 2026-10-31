@@ -1,4 +1,5 @@
 import os
+import sys
 import io
 import time
 import uuid
@@ -21,7 +22,8 @@ from flask import Flask, render_template, request, jsonify
 # ============================================================
 
 PROJECT_DIR = Path(__file__).resolve().parent
-PYTHON_EXE = Path(r"C:\Users\SHWET\.conda\envs\sam_env\python.exe")
+# Allow override via environment variable, fallback to active python interpreter
+PYTHON_EXE = os.environ.get("PYTHON_EXE", sys.executable)
 AGE_MODEL_PATH = PROJECT_DIR / "models" / "Future-Face-ResNet50-Final.pth"
 YUNET_PATH = PROJECT_DIR / "models" / "face_detection_yunet_2023mar.onnx"
 SAM_CHECKPOINT = PROJECT_DIR / "SAM-official" / "pretrained_models" / "sam_ffhq_aging.pt"
@@ -47,8 +49,10 @@ def clean_expired_memory_sessions():
     for k in expired:
         IN_MEMORY_SESSIONS.pop(k, None)
 
-# Ensure Visual Studio C++ compiler tools are available in PATH
+# Ensure Visual Studio C++ compiler tools are available in PATH (Windows only)
 def init_msvc_environment():
+    if os.name != "nt":
+        return
     if shutil.which("cl.exe") is None:
         vsvars = Path(r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat")
         if vsvars.is_file():
@@ -506,8 +510,8 @@ def api_transform():
         return jsonify({"success": False, "error": f"Transformation error: {str(exc)}"}), 500
 
 if __name__ == "__main__":
-    host = "127.0.0.1"
-    port = 5000
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", 5000))
     print("\n" + "=" * 65)
     print(f"Future-Face Web Application is running at:")
     print(f"👉 http://{host}:{port}")
