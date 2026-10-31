@@ -4,10 +4,6 @@ __pycache__/
 *$py.class
 *.so
 
-# Folder
-images/
-SAM/
-
 # Virtual environments and local configuration
 .venv/
 venv/
