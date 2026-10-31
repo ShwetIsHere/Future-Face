@@ -89,20 +89,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================================
-  // 3. GPU HARDWARE HEALTH CHECK
+  // 3. GPU HARDWARE HEALTH CHECK (Live PyTorch CUDA Detection)
   // ============================================================
   const statusDevice = document.getElementById('statusDevice');
+  let detectedGpuName = 'NVIDIA RTX 3060 Laptop GPU';
+
   async function checkSystemHealth() {
     try {
       const res = await fetch('/api/health');
       if (res.ok) {
         const data = await res.json();
-        if (statusDevice) {
-          if (data.gpu && data.gpu !== 'None') {
-            statusDevice.textContent = data.gpu.replace('NVIDIA GeForce ', '') + ' (Ready)';
-          } else {
-            statusDevice.textContent = 'CPU Mode';
+        if (data.gpu && data.gpu !== 'None') {
+          detectedGpuName = data.gpu.replace('NVIDIA GeForce ', '');
+          if (statusDevice) {
+            statusDevice.textContent = detectedGpuName + ' (Ready)';
           }
+          const gpuFootnoteName = document.getElementById('gpuFootnoteName');
+          if (gpuFootnoteName) {
+            gpuFootnoteName.textContent = detectedGpuName;
+          }
+        } else {
+          detectedGpuName = 'CPU Mode';
+          if (statusDevice) statusDevice.textContent = 'CPU Mode';
+          const gpuFootnoteName = document.getElementById('gpuFootnoteName');
+          if (gpuFootnoteName) gpuFootnoteName.textContent = 'CPU Mode';
         }
       }
     } catch (err) {
@@ -1124,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
           safeSetText(scannerStepLabel, 'Stage 4 of 4');
           safeSetText(scannerPercentLabel, '100%');
           safeSetText(progressTitle, 'Age Transformation Complete!');
-          safeSetText(progressSubtitle, `Synthesized successfully in ${finalDuration}s on NVIDIA RTX 3060 GPU.`);
+          safeSetText(progressSubtitle, `Synthesized successfully in ${finalDuration}s on ${detectedGpuName}.`);
 
           // Brief delay so user sees completion & stopwatch result
           await new Promise(r => setTimeout(r, 450));
