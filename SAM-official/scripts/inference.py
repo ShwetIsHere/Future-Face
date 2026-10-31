@@ -8,8 +8,13 @@ import torch
 from torch.utils.data import DataLoader
 
 import sys
-sys.path.append(".")
-sys.path.append("..")
+from pathlib import Path
+file_dir = Path(__file__).resolve().parent
+sam_dir = file_dir.parent
+if str(sam_dir) not in sys.path:
+	sys.path.insert(0, str(sam_dir))
+if str(sam_dir.parent) not in sys.path:
+	sys.path.insert(0, str(sam_dir.parent))
 
 from configs import data_configs
 from datasets.inference_dataset import InferenceDataset
@@ -31,9 +36,10 @@ def run():
 	ckpt = torch.load(test_opts.checkpoint_path, map_location='cpu')
 	opts = ckpt['opts']
 	opts.update(vars(test_opts))
+	device = "cuda" if torch.cuda.is_available() else "cpu"
+	opts['device'] = device
 	opts = Namespace(**opts)
 
-	device = "cuda" if torch.cuda.is_available() else "cpu"
 	net = pSp(opts)
 	net.eval()
 	net.to(device)
@@ -71,19 +77,12 @@ def run():
 				toc = time.time()
 				global_time.append(toc - tic)
 
-				# for i in range(len(input_batch)):
-				# 	result = tensor2im(result_batch[i])
-				# 	im_path = dataset.paths[global_i]
-																								#if error remove this part and uncomment ubove 3 line
-#####################################################################################################################################################
 				for i in range(len(input_batch)):
 					result = tensor2im(result_batch[i])
 					im_path = dataset.paths[global_i]
 
 					# Define the output size before either save condition.
 					resize_amount = (256, 256) if opts.resize_outputs else (1024, 1024)
-
-#####################################################################################################################################################
 
 					if opts.couple_outputs or global_i % 100 == 0:
 						input_im = log_image(input_batch[i], opts)

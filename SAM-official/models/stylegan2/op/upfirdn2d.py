@@ -1,17 +1,23 @@
 import os
-
 import torch
 from torch.autograd import Function
-from torch.utils.cpp_extension import load
+import torch.nn.functional as F
 
-module_path = os.path.dirname(__file__)
-upfirdn2d_op = load(
-    'upfirdn2d',
-    sources=[
-        os.path.join(module_path, 'upfirdn2d.cpp'),
-        os.path.join(module_path, 'upfirdn2d_kernel.cu'),
-    ],
-)
+upfirdn2d_op = None
+if torch.cuda.is_available():
+    try:
+        from torch.utils.cpp_extension import load
+        module_path = os.path.dirname(__file__)
+        upfirdn2d_op = load(
+            'upfirdn2d',
+            sources=[
+                os.path.join(module_path, 'upfirdn2d.cpp'),
+                os.path.join(module_path, 'upfirdn2d_kernel.cu'),
+            ],
+        )
+    except Exception as e:
+        print(f"[Notice] Could not load upfirdn2d CUDA op ({e}). Using pure PyTorch fallback.")
+        upfirdn2d_op = None
 
 
 class UpFirDn2dBackward(Function):
@@ -19,6 +25,9 @@ class UpFirDn2dBackward(Function):
     def forward(
             ctx, grad_output, kernel, grad_kernel, up, down, pad, g_pad, in_size, out_size
     ):
+        if upfirdn2d_op is None or not grad_output.is_cuda:
+            raise NotImplementedError("CPU backward pass for UpFirDn2d is not supported.")
+
         up_x, up_y = up
         down_x, down_y = down
         g_pad_x0, g_pad_x1, g_pad_y0, g_pad_y1 = g_pad
@@ -58,6 +67,9 @@ class UpFirDn2dBackward(Function):
 
     @staticmethod
     def backward(ctx, gradgrad_input):
+        if upfirdn2d_op is None or not gradgrad_input.is_cuda:
+            raise NotImplementedError("CPU backward pass for UpFirDn2d is not supported.")
+
         kernel, = ctx.saved_tensors
 
         gradgrad_input = gradgrad_input.reshape(-1, ctx.in_size[2], ctx.in_size[3], 1)
@@ -74,7 +86,6 @@ class UpFirDn2dBackward(Function):
             ctx.pad_y0,
             ctx.pad_y1,
         )
-        # gradgrad_out = gradgrad_out.view(ctx.in_size[0], ctx.out_size[0], ctx.out_size[1], ctx.in_size[3])
         gradgrad_out = gradgrad_out.view(
             ctx.in_size[0], ctx.in_size[1], ctx.out_size[0], ctx.out_size[1]
         )
@@ -112,16 +123,23 @@ class UpFirDn2d(Function):
 
         ctx.g_pad = (g_pad_x0, g_pad_x1, g_pad_y0, g_pad_y1)
 
-        out = upfirdn2d_op.upfirdn2d(
-            input, kernel, up_x, up_y, down_x, down_y, pad_x0, pad_x1, pad_y0, pad_y1
-        )
-        # out = out.view(major, out_h, out_w, minor)
+        if upfirdn2d_op is None or not input.is_cuda:
+            out = upfirdn2d_native(
+                input, kernel, up_x, up_y, down_x, down_y, pad_x0, pad_x1, pad_y0, pad_y1
+            )
+        else:
+            out = upfirdn2d_op.upfirdn2d(
+                input, kernel, up_x, up_y, down_x, down_y, pad_x0, pad_x1, pad_y0, pad_y1
+            )
         out = out.view(-1, channel, out_h, out_w)
 
         return out
 
     @staticmethod
     def backward(ctx, grad_output):
+        if upfirdn2d_op is None or not grad_output.is_cuda:
+            raise NotImplementedError("CPU backward pass for UpFirDn2d is not supported.")
+
         kernel, grad_kernel = ctx.saved_tensors
 
         grad_input = UpFirDn2dBackward.apply(

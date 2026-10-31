@@ -467,10 +467,23 @@ def api_transform():
             ]
 
             print(f"\n[Transform] In-Memory Session {session_id} -> Estimated: {estimated_age:.1f}, Shift: {years:+d}, Target: {target_age}")
-            result = subprocess.run(command, cwd=str(PROJECT_DIR / "SAM-official"), env=os.environ.copy())
+            result = subprocess.run(
+                command,
+                cwd=str(PROJECT_DIR / "SAM-official"),
+                env=os.environ.copy(),
+                capture_output=True,
+                text=True
+            )
 
             if result.returncode != 0:
-                return jsonify({"success": False, "error": f"SAM transformation failed with exit code {result.returncode}."}), 500
+                print(f"[Error] SAM Return Code: {result.returncode}")
+                if result.stdout:
+                    print(f"[Error] SAM STDOUT:\n{result.stdout}")
+                if result.stderr:
+                    print(f"[Error] SAM STDERR:\n{result.stderr}")
+                err_detail = result.stderr.strip() if result.stderr else result.stdout.strip()
+                last_err = err_detail.splitlines()[-1] if err_detail else f"Exit code {result.returncode}"
+                return jsonify({"success": False, "error": f"SAM transformation failed: {last_err}"}), 500
 
             generated_source = find_generated_image(output_dir, target_age, "face_224.jpg")
             pil_generated_raw = Image.open(generated_source).convert("RGB")

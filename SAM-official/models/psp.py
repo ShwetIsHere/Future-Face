@@ -102,7 +102,10 @@ class pSp(nn.Module):
 
 	def __load_latent_avg(self, ckpt, repeat=None):
 		if 'latent_avg' in ckpt:
-			self.latent_avg = ckpt['latent_avg'].to(self.opts.device)
+			target_dev = getattr(self.opts, 'device', 'cuda' if torch.cuda.is_available() else 'cpu')
+			if not torch.cuda.is_available() and 'cuda' in str(target_dev):
+				target_dev = 'cpu'
+			self.latent_avg = ckpt['latent_avg'].to(target_dev)
 			if repeat is not None:
 				self.latent_avg = self.latent_avg.repeat(repeat, 1)
 		else:

@@ -1,23 +1,32 @@
 import os
-
 import torch
 from torch import nn
 from torch.autograd import Function
-from torch.utils.cpp_extension import load
+import torch.nn.functional as F
 
-module_path = os.path.dirname(__file__)
-fused = load(
-    'fused',
-    sources=[
-        os.path.join(module_path, 'fused_bias_act.cpp'),
-        os.path.join(module_path, 'fused_bias_act_kernel.cu'),
-    ],
-)
+fused = None
+if torch.cuda.is_available():
+    try:
+        from torch.utils.cpp_extension import load
+        module_path = os.path.dirname(__file__)
+        fused = load(
+            'fused',
+            sources=[
+                os.path.join(module_path, 'fused_bias_act.cpp'),
+                os.path.join(module_path, 'fused_bias_act_kernel.cu'),
+            ],
+        )
+    except Exception as e:
+        print(f"[Notice] Could not load fused CUDA op ({e}). Using pure PyTorch fallback.")
+        fused = None
 
 
 class FusedLeakyReLUFunctionBackward(Function):
     @staticmethod
     def forward(ctx, grad_output, out, negative_slope, scale):
+        if fused is None or not grad_output.is_cuda:
+            raise NotImplementedError("Backward not implemented for CPU fallback")
+
         ctx.save_for_backward(out)
         ctx.negative_slope = negative_slope
         ctx.scale = scale
@@ -39,6 +48,9 @@ class FusedLeakyReLUFunctionBackward(Function):
 
     @staticmethod
     def backward(ctx, gradgrad_input, gradgrad_bias):
+        if fused is None or not gradgrad_input.is_cuda:
+            raise NotImplementedError("Backward not implemented for CPU fallback")
+
         out, = ctx.saved_tensors
         gradgrad_out = fused.fused_bias_act(
             gradgrad_input, gradgrad_bias, out, 3, 1, ctx.negative_slope, ctx.scale
@@ -50,6 +62,13 @@ class FusedLeakyReLUFunctionBackward(Function):
 class FusedLeakyReLUFunction(Function):
     @staticmethod
     def forward(ctx, input, bias, negative_slope, scale):
+        if fused is None or not input.is_cuda:
+            if bias is not None:
+                rest_dim = [1] * (input.ndim - bias.ndim - 1)
+                return F.leaky_relu(input + bias.view(1, bias.shape[0], *rest_dim), negative_slope=negative_slope) * scale
+            else:
+                return F.leaky_relu(input, negative_slope=negative_slope) * scale
+
         empty = input.new_empty(0)
         out = fused.fused_bias_act(input, bias, empty, 3, 0, negative_slope, scale)
         ctx.save_for_backward(out)
@@ -60,6 +79,9 @@ class FusedLeakyReLUFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
+        if fused is None or not grad_output.is_cuda:
+            raise NotImplementedError("Backward not implemented for CPU fallback")
+
         out, = ctx.saved_tensors
 
         grad_input, grad_bias = FusedLeakyReLUFunctionBackward.apply(
@@ -81,5 +103,11 @@ class FusedLeakyReLU(nn.Module):
         return fused_leaky_relu(input, self.bias, self.negative_slope, self.scale)
 
 
-def fused_leaky_relu(input, bias, negative_slope=0.2, scale=2 ** 0.5):
+def fused_leaky_relu(input, bias=None, negative_slope=0.2, scale=2 ** 0.5):
+    if fused is None or not input.is_cuda:
+        if bias is not None:
+            rest_dim = [1] * (input.ndim - bias.ndim - 1)
+            return F.leaky_relu(input + bias.view(1, bias.shape[0], *rest_dim), negative_slope=negative_slope) * scale
+        else:
+            return F.leaky_relu(input, negative_slope=negative_slope) * scale
     return FusedLeakyReLUFunction.apply(input, bias, negative_slope, scale)
