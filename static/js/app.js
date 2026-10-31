@@ -283,6 +283,53 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFile = null;
     let capturedDataUrl = null;
 
+    // Face Angle & Photo Guidelines Tutorial Modal Logic
+    const faceGuideModal = document.getElementById('faceGuideModal');
+    const btnOpenFaceGuide = document.getElementById('btnOpenFaceGuide');
+    const btnCloseFaceGuide = document.getElementById('btnCloseFaceGuide');
+    const btnAcknowledgeGuide = document.getElementById('btnAcknowledgeGuide');
+    const chkDoNotShowAgain = document.getElementById('chkDoNotShowAgain');
+
+    function openFaceGuide() {
+      if (faceGuideModal) {
+        faceGuideModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeFaceGuide(persistChoice = false) {
+      if (faceGuideModal) {
+        faceGuideModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        if (persistChoice || (chkDoNotShowAgain && chkDoNotShowAgain.checked)) {
+          sessionStorage.setItem('ff_face_guide_dismissed', 'true');
+        }
+      }
+    }
+
+    if (btnOpenFaceGuide) btnOpenFaceGuide.addEventListener('click', openFaceGuide);
+    if (btnCloseFaceGuide) btnCloseFaceGuide.addEventListener('click', () => closeFaceGuide(false));
+    if (btnAcknowledgeGuide) btnAcknowledgeGuide.addEventListener('click', () => closeFaceGuide(true));
+
+    if (faceGuideModal) {
+      faceGuideModal.addEventListener('click', (e) => {
+        if (e.target === faceGuideModal) {
+          closeFaceGuide(false);
+        }
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && faceGuideModal && !faceGuideModal.classList.contains('hidden')) {
+        closeFaceGuide(false);
+      }
+    });
+
+    // Automatically show tutorial popup when user enters Try Now page (once per browser session)
+    if (!sessionStorage.getItem('ff_face_guide_dismissed')) {
+      setTimeout(openFaceGuide, 450);
+    }
+
     // Step Progress Nodes
     function updateStepProgress(stepNum) {
       const stepNodes = [
@@ -803,6 +850,10 @@ document.addEventListener('DOMContentLoaded', () => {
         safeSetText(displayEstimatedAge, '--');
         safeSetText(currentAgeHint, '(Upload or capture photo to estimate)');
         showToast(err.message || 'Error estimating age. Please choose another photo.');
+        const msg = String(err.message || '').toLowerCase();
+        if (msg.includes('angle') || msg.includes('tilted') || msg.includes('blurry') || msg.includes('small') || msg.includes('face')) {
+          setTimeout(openFaceGuide, 1200);
+        }
       }
     }
 

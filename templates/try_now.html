@@ -16,6 +16,11 @@
     <p class="try-now-desc">
       Upload a portrait or capture live from your webcam. Our AI will identify your current age and let you simulate any target age between 8 and 90 years.
     </p>
+    <div class="try-now-guide-action">
+      <button type="button" class="btn btn-secondary btn-sm guide-pill-btn" id="btnOpenFaceGuide">
+        <span>📸 View Face Angle &amp; Quality Guide</span>
+      </button>
+    </div>
   </div>
 
   <div class="generator-card card" id="try-now">
@@ -369,6 +374,95 @@
       </div>
       <div class="stopwatch-counter" id="liveTimerDisplay">00:00.00</div>
       <div class="stopwatch-footnote">Estimated processing time: ~30–40 seconds • NVIDIA RTX 3060 Laptop GPU</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FACE ANGLE & PHOTO GUIDELINES TUTORIAL POPUP MODAL -->
+<div class="modal-backdrop-guide hidden" id="faceGuideModal">
+  <div class="guide-modal-box">
+    
+    <!-- Modal Close Button -->
+    <button type="button" class="guide-modal-close" id="btnCloseFaceGuide" aria-label="Close Guide">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- Modal Header -->
+    <div class="guide-modal-header">
+      <div class="guide-badge-pill">
+        <span class="guide-badge-icon">📸</span>
+        <span>Recommended Photo Angles</span>
+      </div>
+      <h2 class="guide-modal-title">Face Angle &amp; Quality Guide</h2>
+      <p class="guide-modal-desc">
+        To avoid distorted, messy, or unnatural AI aging results, please follow these portrait angle recommendations:
+      </p>
+    </div>
+
+    <!-- Reference Image Comparison Card -->
+    <div class="guide-image-showcase">
+      <div class="guide-img-wrapper">
+        <img src="/static/images/face_angle_guide.png" alt="Face Angle Guide Reference" class="guide-visual-img">
+      </div>
+      <div class="guide-angles-legend">
+        <div class="legend-card legend-acceptable">
+          <span class="legend-dot dot-yellow"></span>
+          <div class="legend-text">
+            <strong>Slight Side Angle (≤30°)</strong>
+            <span>Acceptable if both eyes and nose contours are fully visible</span>
+          </div>
+        </div>
+        <div class="legend-card legend-recommended">
+          <span class="legend-dot dot-green"></span>
+          <div class="legend-text">
+            <strong>Frontal Portrait (0°–15°)</strong>
+            <span>Recommended for sharpest identity &amp; natural aging</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Checklist (Do's and Don'ts) -->
+    <div class="guide-checklist-grid">
+      <div class="checklist-col col-dos">
+        <h4 class="checklist-title title-do">
+          <span class="check-icon">✓</span> What Works Best
+        </h4>
+        <ul class="checklist-items">
+          <li><strong>Eye-Level Portrait:</strong> Hold camera level with your eyes, not tilted up or down.</li>
+          <li><strong>Close &amp; Centered:</strong> Your face should fill 50–70% of the photo frame.</li>
+          <li><strong>Clear &amp; Focused:</strong> Good lighting without heavy motion blur.</li>
+        </ul>
+      </div>
+
+      <div class="checklist-col col-donts">
+        <h4 class="checklist-title title-dont">
+          <span class="check-icon">✕</span> What to Avoid
+        </h4>
+        <ul class="checklist-items">
+          <li><strong>Steep Chin-Up Angles:</strong> Tilting head up under the chin warps AI geometry.</li>
+          <li><strong>Extreme Side Profiles:</strong> Facing 90° away hides half your face.</li>
+          <li><strong>Distant or Blurry Photos:</strong> Tiny faces lead to poor feature resolution.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="guide-modal-footer">
+      <label class="guide-checkbox-wrap">
+        <input type="checkbox" id="chkDoNotShowAgain">
+        <span>Don't show this popup automatically again</span>
+      </label>
+      <button type="button" class="btn btn-primary" id="btnAcknowledgeGuide">
+        <span>Got It, Let's Start</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
     </div>
 
   </div>

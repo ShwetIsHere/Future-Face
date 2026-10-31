@@ -118,7 +118,7 @@ print("[Init] Models successfully loaded and cached in memory!")
 # ============================================================
 
 def detect_and_crop_face(image_bgr):
-    """Detect primary face using YuNet, make a square crop with 35% margin, resize to 224x224."""
+    """Detect primary face using YuNet, validate angle, distance & clarity, make a square crop with 35% margin, resize to 224x224."""
     height, width = image_bgr.shape[:2]
     YUNET_DETECTOR.setInputSize((width, height))
     _, faces = YUNET_DETECTOR.detect(image_bgr)
@@ -127,7 +127,54 @@ def detect_and_crop_face(image_bgr):
         return None, "No face detected. Please ensure your face is clearly visible, well-lit, and facing the camera."
 
     face = max(faces, key=lambda f: float(f[2] * f[3]))
-    x, y, w, h = [int(round(face[i])) for i in range(4)]
+    fx, fy, fw, fh = [float(face[i]) for i in range(4)]
+    x, y, w, h = int(round(fx)), int(round(fy)), int(round(fw)), int(round(fh))
+
+    # 1. Close-up & Size check: Face must not be a tiny distant speck
+    face_area = fw * fh
+    img_area = width * height
+    if fw < 70 or fh < 70 or (face_area / (img_area + 1e-6)) < 0.02:
+        return None, "Face is too small or far away. Please upload a closer portrait photo."
+
+    # 2. Extract landmark coordinates
+    r_eye = (float(face[4]), float(face[5]))
+    l_eye = (float(face[6]), float(face[7]))
+    nose = (float(face[8]), float(face[9]))
+    r_mouth = (float(face[10]), float(face[11]))
+    l_mouth = (float(face[12]), float(face[13]))
+
+    # 3. Head Roll / Tilt Check (Must be relatively upright)
+    eye_dx = l_eye[0] - r_eye[0]
+    eye_dy = l_eye[1] - r_eye[1]
+    roll = abs(np.degrees(np.arctan2(eye_dy, eye_dx)))
+    if roll > 90:
+        roll = 180 - roll
+    if roll > 32.0:
+        return None, f"Head is tilted sideways ({roll:.0f}°). Please keep your head upright and face the camera."
+
+    # 4. Pose & Angle Check (Yaw / Horizontal Asymmetry)
+    eye_dist = np.hypot(eye_dx, eye_dy)
+    eye_mid_x = (r_eye[0] + l_eye[0]) / 2.0
+    yaw_asym = abs(nose[0] - eye_mid_x) / (eye_dist + 1e-6)
+
+    nose_x_rel = (nose[0] - fx) / (fw + 1e-6)
+    r_eye_margin = (r_eye[0] - fx) / (fw + 1e-6)
+    l_eye_margin = ((fx + fw) - l_eye[0]) / (fw + 1e-6)
+    eye_margin_diff = abs(r_eye_margin - l_eye_margin)
+
+    if yaw_asym > 0.18 or nose_x_rel < 0.33 or nose_x_rel > 0.67 or eye_margin_diff > 0.20:
+        return None, "Face angle is too steep or turned away. For realistic AI aging, please face the camera at eye level (front or slight angle)."
+
+    # 5. Pitch / Vertical Angle Check (Avoid extreme chin-up or top-down angles)
+    eye_y = (r_eye[1] + l_eye[1]) / 2.0
+    mouth_y = (r_mouth[1] + l_mouth[1]) / 2.0
+    d_eye_nose = nose[1] - eye_y
+    d_nose_mouth = mouth_y - nose[1]
+    if d_eye_nose <= 0 or d_nose_mouth <= 0:
+        return None, "Face is angled too far up or down. Please face the camera directly at eye level."
+    pitch_ratio = d_eye_nose / (d_nose_mouth + 1e-5)
+    if pitch_ratio > 3.2 or pitch_ratio < 0.32:
+        return None, "Camera angle is too steep (chin-up or top-down). Please capture your portrait at eye level."
 
     # 35% square margin around face
     side = int(round(max(w, h) * 1.35))
@@ -150,6 +197,12 @@ def detect_and_crop_face(image_bgr):
     crop = image_bgr[max(0, y1):min(image_bgr.shape[0], y2), max(0, x1):min(image_bgr.shape[1], x2)]
     if crop.size == 0:
         return None, "Face crop resulted in empty region."
+
+    # 6. Blur / Clarity Check on the face crop
+    gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+    blur_var = cv2.Laplacian(gray_crop, cv2.CV_64F).var()
+    if blur_var < 16.0:
+        return None, "Image is too blurry. Please upload a clear, sharp, and focused portrait."
 
     crop_resized = cv2.resize(crop, (IMAGE_SIZE, IMAGE_SIZE), interpolation=cv2.INTER_CUBIC)
     pil_crop = Image.fromarray(cv2.cvtColor(crop_resized, cv2.COLOR_BGR2RGB))
