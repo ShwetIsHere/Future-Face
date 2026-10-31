@@ -67,14 +67,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const navMenu = document.getElementById('navMenu');
 
   if (mobileMenuBtn && navMenu) {
-    mobileMenuBtn.addEventListener('click', () => {
-      navMenu.classList.toggle('open');
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = navMenu.classList.toggle('open');
+      document.body.classList.toggle('mobile-menu-active', isOpen);
     });
 
     navMenu.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', () => {
         navMenu.classList.remove('open');
+        document.body.classList.remove('mobile-menu-active');
       });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (navMenu.classList.contains('open') && !navMenu.contains(e.target) && e.target !== mobileMenuBtn) {
+        navMenu.classList.remove('open');
+        document.body.classList.remove('mobile-menu-active');
+      }
     });
   }
 
@@ -481,29 +491,30 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Demo samples picker
+    // Demo samples picker strictly from demo folder
     const samplesGrid = document.getElementById('samplesGrid');
     const demoSamples = [
-      { name: 'person1.jpg', label: 'Female 1' },
-      { name: 'person21.jpg', label: 'Male 1' },
-      { name: 'child.jpg', label: 'Child 1' },
-      { name: 'child2.jpg', label: 'Child 2' },
-      { name: 'senior.jpg', label: 'Senior' }
+      { name: 'person1.jpg', label: 'Person 1', type: 'image/jpeg' },
+      { name: 'person2.webp', label: 'Person 2', type: 'image/webp' },
+      { name: 'person3.jpg', label: 'Person 3', type: 'image/jpeg' },
+      { name: 'person4.webp', label: 'Person 4', type: 'image/webp' },
+      { name: 'person5.png', label: 'Person 5', type: 'image/png' },
+      { name: 'person6.png', label: 'Person 6', type: 'image/png' }
     ];
 
     if (samplesGrid) {
       samplesGrid.innerHTML = '';
       demoSamples.forEach(sample => {
         const img = document.createElement('img');
-        img.src = `/sample-image/${sample.name}`;
+        img.src = `/demo/${sample.name}`;
         img.alt = sample.label;
         img.title = `Click to test demo portrait: ${sample.label}`;
         img.className = 'demo-sample-thumb';
         img.addEventListener('click', async () => {
           try {
-            const res = await fetch(`/sample-image/${sample.name}`);
+            const res = await fetch(`/demo/${sample.name}`);
             const blob = await res.blob();
-            const file = new File([blob], sample.name, { type: 'image/jpeg' });
+            const file = new File([blob], sample.name, { type: sample.type || blob.type || 'image/jpeg' });
             handleFileSelection(file);
           } catch (err) {
             showToast(`Could not load ${sample.name}`);

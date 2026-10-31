@@ -5,8 +5,9 @@
 {% block content %}
 <div class="about-page-container">
 
-  <!-- HERO BANNER -->
+  <!-- TOP HEADER PART (Introducing Future-Face / AI-Powered Facial Age Estimation and Age Transformation) -->
   <header class="about-hero-header">
+
     <center>
       <div class="hero-pill-badge">
         <span class="sparkle-icon">📖</span>
@@ -35,179 +36,223 @@
       </a>
     </div>
 
-    <!-- Combined Overview Showcase -->
-    <div class="about-showcase-card card">
-      <img src="/demo/combined.png" alt="Future-Face Combined Demonstration" class="about-combined-img">
-      <div class="showcase-caption">
-        <strong>Figure 1:</strong> FutureFace end-to-end pipeline combining face detection, age estimation, and continuous facial age synthesis.
+    <!-- FIRST: SHOW COMBINED.PNG (Full-spectrum pipeline overview) -->
+    <div class="showcase-frame-card card">
+      <div class="showcase-img-wrap">
+        <img src="/demo/Combine.png" alt="Full-spectrum age progression pipeline" class="about-combined-img">
       </div>
+      <p class="showcase-caption-text">
+        Full-spectrum age progression pipeline (-10 years youth transformation to +50 years elder aging).
+      </p>
     </div>
   </header>
 
-  <!-- SECTION: WHY WAS THIS PROJECT CREATED? -->
-  <section class="about-content-card card">
-    <div class="about-section-badge">The Motivation</div>
-    <h2 class="about-section-title">Why Was Future-Face Created?</h2>
-    
-    <div class="quote-callout">
-      <p class="quote-text">
+  <!-- CARD 1: WHY FUTURE-FACE? (Matching Attachment 1) -->
+  <section class="journey-main-card card">
+    <div class="card-headline-row">
+      <div class="card-icon-title">
+        <svg class="title-svg-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <h2 class="card-main-title">Why Future-Face?</h2>
+      </div>
+    </div>
+
+    <h3 class="card-sub-heading">Introducing Future-Face: AI-Powered Facial Age Estimation and Age Transformation</h3>
+
+    <div class="quote-callout-box">
+      <p class="quote-content">
         &ldquo;What if an individual captured in an old CCTV image needs to be identified years later, after significant changes in their appearance?&rdquo;
       </p>
     </div>
 
-    <p class="about-body-text">
-      This question inspired me to develop <strong>Future-Face</strong>, an AI-powered project that estimates facial age and generates age-transformed facial images.
+    <p class="journey-text">
+      This fundamental question inspired me to develop <strong>Future-Face</strong>—an AI-powered project that estimates facial age and generates age-transformed facial images.
     </p>
 
-    <p class="about-body-text">
+    <p class="journey-text">
       In real-world investigative scenarios, historical CCTV footage or old photographs may contain images of suspects or missing individuals. If a person remains unidentified for years, understanding how their appearance might have changed over time could potentially assist investigators in reviewing leads and comparing visual information.
     </p>
   </section>
 
-  <!-- SECTION: PROJECT JOURNEY -->
-  <section class="about-content-card card">
-    <div class="about-section-badge">The Architecture</div>
-    <h2 class="about-section-title">Project Journey &amp; Engineering Evolution</h2>
+  <!-- CARD 2: PROJECT JOURNEY & ARCHITECTURE (Matching Attachments 2, 3, 4) -->
+  <section class="journey-main-card card">
+    <div class="card-headline-row">
+      <div class="card-icon-title">
+        <svg class="title-svg-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <h2 class="card-main-title">Project Journey &amp; Architecture</h2>
+      </div>
+    </div>
 
-    <p class="about-body-text">
-      I structured the system into two distinct, high-performance stages:
+    <p class="journey-lead-text">
+      First, I divided this project into two parts: first, identifying age from an image; and second, transforming the image based on a given number of years.
     </p>
 
-    <div class="stages-summary-grid">
-      <div class="stage-mini-box">
-        <span class="stage-tag">Stage 1</span>
-        <h4>Age Identification</h4>
-        <p>Extract face crop from image and estimate continuous chronological age with high precision.</p>
+    <!-- INNER SUB-CARD 1: STAGE 1: AGE IDENTIFICATION -->
+    <div class="inner-stage-card">
+      <div class="stage-title-header">
+        <span class="stage-circle-num">1</span>
+        <h3 class="stage-heading">Stage 1: Age Identification</h3>
       </div>
-      <div class="stage-arrow">➔</div>
-      <div class="stage-mini-box">
-        <span class="stage-tag">Stage 2</span>
-        <h4>Age Transformation</h4>
-        <p>Synthesize identity-preserving facial aging forward or backward by a requested number of years.</p>
+
+      <p class="journey-text">
+        For age identification, I used the <strong>UTKFace dataset</strong> which has more than <strong>24k images</strong> of children, teens, and adults. I fine-tuned that model on <strong>ResNet-50</strong> and used <strong>Yu-Net</strong> for face detection.
+      </p>
+
+      <div class="stage-media-wrap">
+        <div class="stage-img-box">
+          <img src="/demo/age_estimate.png" alt="Real-time face detection with Yu-Net and age estimation" class="stage-img">
+        </div>
+        <p class="stage-caption-text">
+          Real-time face detection with Yu-Net and age estimation benchmarked against public ground truth.
+        </p>
       </div>
     </div>
 
-    <!-- PART 1: AGE IDENTIFICATION -->
-    <div class="journey-step-block">
-      <div class="step-counter-header">
-        <span class="step-circle">1</span>
-        <h3>Part 1: Facial Age Identification</h3>
+    <!-- INNER SUB-CARD 2: STAGE 2: AGE TRANSFORMATION & CHALLENGES -->
+    <div class="inner-stage-card">
+      <div class="stage-title-header">
+        <span class="stage-circle-num">2</span>
+        <h3 class="stage-heading">Stage 2: Age Transformation &amp; Challenges</h3>
       </div>
-      <p class="about-body-text">
-        For age identification, I utilized the <strong>UTKFace dataset</strong>, which consists of more than <strong>24,000+ labeled images</strong> spanning children, teens, and adults across various ethnicities.
-      </p>
-      <p class="about-body-text">
-        I fine-tuned a <strong>ResNet-50</strong> deep convolutional architecture for continuous age regression and combined it with <strong>YuNet</strong>, a lightweight and ultra-fast ONNX-based face detector capable of pinpointing bounding boxes and facial landmarks even in challenging lighting conditions.
-      </p>
 
-      <div class="journey-media-frame">
-        <img src="/demo/age_estimate.png" alt="Age Estimation Architecture & Results" class="journey-img-full">
-        <div class="frame-label">YuNet face detection combined with ResNet-50 age regression</div>
-      </div>
-    </div>
+      <!-- CHALLENGE 1: OLD & BLURRY DATASET (FG-NET) -->
+      <div class="challenge-topic-block">
+        <div class="challenge-title-row">
+          <span class="topic-warn-icon">⚠</span>
+          <h4 class="topic-title topic-warn">Challenge 1: Old &amp; Blurry Dataset (FG-Net)</h4>
+        </div>
 
-    <!-- PART 2: AGE TRANSFORMATION & CHALLENGES -->
-    <div class="journey-step-block">
-      <div class="step-counter-header">
-        <span class="step-circle">2</span>
-        <h3>Part 2: Age Transformation &amp; Key Challenges Solved</h3>
-      </div>
-      
-      <!-- Challenge 1: FG-Net & Blurry Output -->
-      <div class="challenge-subcard">
-        <h4 class="challenge-title">Challenge 1: The FG-Net Dataset &amp; Blurry/Messy Images</h4>
-        <p class="about-body-text">
-          Initially, I tested with the <strong>FG-Net dataset</strong>, which contains approximately 1,000 images. However, this dataset was captured decades ago; the images were low-resolution, noisy, and blurry. When training initial generative models on FG-Net, the model output messy, distorted, and inappropriate facial artifacts.
+        <p class="journey-text">
+          Then I came to age transformation. Initially discovered the <strong>FG-Net dataset</strong> which has 1,000 images, but the problem was this dataset was too old and blurry. When I trained the model, it yielded messy, distorted, and inappropriate images:
         </p>
 
-        <!-- Side-by-Side: problem-1.jpg vs problem-1-1.png -->
-        <div class="side-by-side-wrapper">
-          <div class="comparison-column">
-            <span class="column-badge badge-given">Given Image (FG-Net input)</span>
-            <div class="comparison-img-box">
-              <img src="/demo/problem-1-1.png" alt="Given Image problem 1" loading="lazy">
+        <!-- Side-by-Side: problem-1-.png (Original) vs problem-1.jpg (Transform) -->
+        <div class="journey-side-by-side">
+          <div class="side-col">
+            <div class="col-tag-header">
+              <span class="tag-label-blue">GIVEN IMAGE</span>
             </div>
-            <span class="column-filename">Original Photo</span>
+            <div class="journey-img-frame">
+              <img src="/demo/problem-1-1.png" alt="Given image (Original Photo)" class="full-view-img" loading="lazy">
+            </div>
           </div>
 
-          <div class="comparison-column">
-            <span class="column-badge badge-error">Transformed (Blurry &amp; Messy Artifacts)</span>
-            <div class="comparison-img-box">
-              <img src="/demo/problem-1.jpg" alt="Transformed messy result" loading="lazy">
+          <div class="side-col">
+            <div class="col-tag-header">
+              <span class="tag-label-red">TRANSFORM</span>
             </div>
-            <span class="column-filename">Transform</span>
+            <div class="journey-img-frame">
+              <img src="/demo/problem-1.jpg" alt="Transform image (Distorted)" class="full-view-img" loading="lazy">
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Challenge 2: CACD & Gender Inconsistency -->
-      <div class="challenge-subcard">
-        <h4 class="challenge-title">Challenge 2: The CACD Dataset &amp; The Gender Shift Problem</h4>
-        <p class="about-body-text">
-          To overcome the low-resolution issue, I moved to the <strong>CACD (Cross-Age Celebrity Dataset)</strong>, which contains over <strong>150,000+ high-quality images</strong> of celebrities collected across the internet.
+      <hr class="journey-divider">
+
+      <!-- CHALLENGE 2: HIGH QUALITY DATASET & THE GENDER PROBLEM -->
+      <div class="challenge-topic-block">
+        <div class="challenge-title-row">
+          <span class="topic-warn-icon">⚠</span>
+          <h4 class="topic-title topic-warn">Challenge 2: High Quality Dataset &amp; The Gender Problem</h4>
+        </div>
+
+        <p class="journey-text">
+          For better results, I discovered a new dataset—<strong>CACD</strong>, which has more than <strong>150k images</strong> of celebrities captured from the internet (high quality). I trained again, but this time the problem changed: the model didn't identify the gender of the given photo.
         </p>
-        <p class="about-body-text">
-          While image resolution drastically improved, a critical new problem emerged: <em>the model struggled with gender consistency</em>. When given a female portrait, the model would occasionally transform her into a male subject or vice versa as age progressed.
+        <p class="journey-text">
+          As shown below, the given image is female, but sometimes it converted into a man, and sometimes into female.
         </p>
 
-        <!-- Side-by-Side: Gender_problem.jpg vs Gender_problem_fix.jpg -->
-        <div class="side-by-side-wrapper">
-          <div class="comparison-column">
-            <span class="column-badge badge-given">Gender Inconsistency Issue</span>
-            <div class="comparison-img-box">
-              <img src="/demo/Gender_problem.jpg" alt="Gender problem input" loading="lazy">
+        <!-- Side-by-Side: Gender_problem.png vs Gender_problem_fix.png -->
+        <div class="journey-side-by-side">
+          <div class="side-col">
+            <div class="col-tag-header">
+              <span class="tag-label-red">GENDER INCONSISTENCY ISSUE</span>
+            </div>
+            <div class="journey-img-frame">
+              <img src="/demo/Gender_problem.png" alt="Gender Inconsistency Issue" class="full-view-img" loading="lazy">
             </div>
           </div>
 
-          <div class="comparison-column">
-            <span class="column-badge badge-warning">Gender Preserved (Corrected Model)</span>
-            <div class="comparison-img-box">
-              <img src="/demo/Gender_problem_fix.jpg" alt="Gender problem fix comparison" loading="lazy">
+          <div class="side-col">
+            <div class="col-tag-header">
+              <span class="tag-label-green">GENDER PRESERVED (CORRECTED MODEL)</span>
+            </div>
+            <div class="journey-img-frame">
+              <img src="/demo/Gender_problem_fix.png" alt="Gender Preserved (Corrected Model)" class="full-view-img" loading="lazy">
             </div>
           </div>
         </div>
-        <p class="caption-note">
-          As shown above, the input image was female, but the unconditioned latent space frequently drifted into male facial traits during advanced aging.
-        </p>
       </div>
 
-      <!-- Breakthrough: SAM Model -->
-      <div class="challenge-subcard success-card">
-        <h4 class="challenge-title highlight-title">The Breakthrough: SAM (Style-based Age Manipulation)</h4>
-        <p class="about-body-text">
-          To definitively solve both artifact distortion and gender drift, I integrated the <strong>SAM (Style-based Age Manipulation)</strong> model. SAM leverages StyleGAN2's disentangled latent space with a dedicated age transformation module and identity preservation loss.
-        </p>
-        <p class="about-body-text">
-          By fine-tuning SAM on CACD, the generator successfully preserved core identity, gender, bone structure, and facial demeanor, producing clean, photorealistic results across the lifespan.
-        </p>
+      <hr class="journey-divider">
 
-        <!-- Side-by-Side: demo1.jpg vs demo2.jpg -->
-        <div class="side-by-side-wrapper">
-          <div class="comparison-column">
-            <span class="column-badge badge-given">ging Progression (+25 Years | Target Age 65)</span>
-            <div class="comparison-img-box">
-              <img src="/demo/demo1.jpg" alt="Given portrait demo1" loading="lazy">
-            </div>
-            <span class="column-filename">Given image (Age 39.5) → Transformed to Target Age 65</span>
-          </div>
-
-          <div class="comparison-column">
-            <span class="column-badge badge-success">Youth Regression (-25 Years | Target Age 15)</span>
-            <div class="comparison-img-box">
-              <img src="/demo/demo2.jpg" alt="Transformed portrait demo2" loading="lazy">
-            </div>
-            <span class="column-filename">Given image (Age 39.5) → Transformed to Target Age 15</span>
-          </div>
+      <!-- THE SOLUTION: FINE-TUNING PRE-TRAINED SAM MODEL -->
+      <div class="challenge-topic-block solution-block">
+        <div class="challenge-title-row">
+          <span class="topic-check-icon">✓</span>
+          <h4 class="topic-title topic-success">The Solution: Fine-Tuning Pre-trained SAM Model</h4>
         </div>
-        <p class="caption-note success-note">
-          Near-perfect visualization: natural aging signs, preserved facial geometry, and accurate gender identity.
+
+        <p class="journey-text">
+          For this, I discovered the <strong>SAM (Style-based Age Manipulation) model</strong>, which is already a pre-trained model for this. I fine-tuned this model on the CACD dataset, which produced nearly perfect, identity-preserving visualizations.
         </p>
       </div>
-
     </div>
   </section>
 
-  <!-- CTA ROW -->
+  <!-- CARD 3: FINAL TRANSFORMATION RESULTS (Matching Attachments 2 & 5) -->
+  <section class="journey-main-card card">
+    <div class="card-headline-row">
+      <div class="card-icon-title">
+        <svg class="title-svg-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+        </svg>
+        <h2 class="card-main-title">Final Transformation Results</h2>
+      </div>
+    </div>
+
+    <p class="journey-text">
+      Look at the results showing continuous bidirectional transformation: aging progression (+25 years) alongside youth regression (-25 years) with identity, expression, and gender preservation.
+    </p>
+
+    <!-- Side-by-Side: demo1.jpg vs demo2.jpg -->
+    <div class="journey-side-by-side">
+      <div class="side-col">
+        <div class="col-tag-header">
+          <span class="tag-label-blue">AGING PROGRESSION (+25 YEARS | TARGET AGE 65)</span>
+        </div>
+        <div class="journey-img-frame">
+          <img src="/demo/demo1.jpg" alt="Aging Progression demo1.jpg" class="full-view-img" loading="lazy">
+        </div>
+        <p class="side-caption-text">
+          Given image (Age 39.5) &rarr; Transformed to Target Age 65
+        </p>
+      </div>
+
+      <div class="side-col">
+        <div class="col-tag-header">
+          <span class="tag-label-blue">YOUTH REGRESSION (-25 YEARS | TARGET AGE 15)</span>
+        </div>
+        <div class="journey-img-frame">
+          <img src="/demo/demo2.jpg" alt="Youth Regression demo2.jpg" class="full-view-img" loading="lazy">
+        </div>
+        <p class="side-caption-text">
+          Given image (Age 39.5) &rarr; Transformed to Target Age 15
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CTA BUTTONS -->
   <div class="about-bottom-cta">
     <a href="/try-now" class="btn btn-primary btn-large">
       <span>Try Live Age Transformation</span>
