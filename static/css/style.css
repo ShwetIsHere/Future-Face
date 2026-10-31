@@ -1132,6 +1132,18 @@ html.dark .sun-icon { display: none; }
 }
 
 /* Quick Preset Chips */
+.custom-range-slider:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
+.custom-range-slider:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .preset-chips-wrap {
   margin-top: 0.25rem;
 }
@@ -1140,6 +1152,13 @@ html.dark .sun-icon { display: none; }
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+.no-presets-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0.2rem 0;
 }
 
 .preset-chip {

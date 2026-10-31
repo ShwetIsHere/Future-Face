@@ -140,7 +140,7 @@
         <!-- Current / Estimated Age display box -->
         <div class="form-group">
           <label for="currentAgeInput" class="form-label">
-            Current Age <span class="label-hint" id="currentAgeHint">(AI Estimated via ResNet-50)</span>
+            Current Age <span class="label-hint" id="currentAgeHint">(Upload or capture photo to estimate)</span>
           </label>
           <div class="current-age-box">
             <div class="face-thumb-mini" id="thumbMiniWrap">
@@ -153,8 +153,8 @@
               </div>
             </div>
             <div class="age-input-row">
-              <span class="current-age-value" id="displayEstimatedAge">20</span>
-              <span class="age-unit-label">years old</span>
+              <span class="current-age-value" id="displayEstimatedAge">--</span>
+              <span class="age-unit-label" id="ageUnitLabel">years old</span>
             </div>
           </div>
         </div>
@@ -163,12 +163,12 @@
         <div class="form-group target-age-group">
           <div class="target-age-header">
             <label for="yearsSlider" class="form-label">Target Age</label>
-            <span class="target-age-badge" id="targetAgeBadge">60 years</span>
+            <span class="target-age-badge" id="targetAgeBadge">--</span>
           </div>
 
-          <!-- Interactive Slider (Strictly bounded between 8 and 90) -->
+          <!-- Interactive Slider (Strictly bounded between 8 and 90, enabled after face detection) -->
           <div class="slider-wrapper">
-            <input type="range" id="yearsSlider" min="8" max="90" value="60" step="1" class="custom-range-slider">
+            <input type="range" id="yearsSlider" min="8" max="90" value="50" step="1" class="custom-range-slider" disabled>
             <div class="slider-ticks">
               <span id="sliderTickMin">8</span>
               <span>30</span>
@@ -181,13 +181,13 @@
           <!-- Quick Presets -->
           <div class="preset-chips-wrap">
             <div class="preset-chips" id="presetChipsContainer">
-              <!-- Populated dynamically to guarantee [8, 90] bounds -->
+              <span class="no-presets-hint">Upload or capture a photo to unlock age shift presets</span>
             </div>
           </div>
 
           <!-- Dynamic Target Summary -->
           <div class="target-summary-pill" id="targetSummaryPill">
-            <span id="bannerSummaryText">Transforming approximately +40 years into the future</span>
+            <span id="bannerSummaryText">Upload or capture a photo first to estimate age and choose transformation</span>
           </div>
         </div>
 
@@ -263,13 +263,21 @@
         <div class="result-buttons-group">
           <button class="btn btn-secondary btn-sm" id="btnTryAnotherAge">Change Age</button>
           <button class="btn btn-secondary btn-sm" id="btnRestartAll">New Photo</button>
-          <a id="btnDownloadPoster" class="btn btn-primary btn-sm" download="FutureFace_Comparison.jpg" target="_blank">
+          <a id="btnDownloadPoster" class="btn btn-primary btn-sm" download="FutureFace_Comparison.jpg" target="_blank" title="Download side-by-side comparison poster with watermark">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            <span>Download Result</span>
+            <span>Download Comparison</span>
+          </a>
+          <a id="btnDownloadTransformed" class="btn btn-secondary btn-sm" download="FutureFace_Transformed.jpg" target="_blank" title="Download transformed face portrait with watermark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download Transformed Face</span>
           </a>
         </div>
       </div>

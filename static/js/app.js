@@ -277,8 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const tryNowRoot = document.getElementById('try-now');
   if (tryNowRoot) {
     let currentSessionId = null;
-    let currentEstimatedAge = 25.0;
-    let targetAge = 60;
+    let currentEstimatedAge = null;
+    let targetAge = 50;
     let webcamStream = null;
     let selectedFile = null;
     let capturedDataUrl = null;
@@ -555,6 +555,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentEstimatedAge = parseFloat(data.estimated_age);
 
         safeSetText(displayEstimatedAge, Math.round(currentEstimatedAge));
+        const currentAgeHint = document.getElementById('currentAgeHint');
+        safeSetText(currentAgeHint, '(AI Estimated via ResNet-50)');
+
+        if (yearsSlider) {
+          yearsSlider.removeAttribute('disabled');
+        }
 
         const faceDataUrl = data.cropped_image || data.cropped_url;
         if (croppedFaceImg && faceDataUrl) {
@@ -661,6 +667,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTargetDisplays() {
+      if (currentEstimatedAge === null) {
+        safeSetText(targetAgeBadge, '--');
+        safeSetText(bannerSummaryText, 'Upload or capture a photo first to estimate age and choose transformation');
+        return;
+      }
+
       if (yearsSlider) {
         targetAge = parseInt(yearsSlider.value, 10);
       }
@@ -746,6 +758,10 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error(data.error || 'Transformation failed.');
           }
 
+          const origAgeRounded = Math.round(data.estimated_age);
+          const finalTargetAge = Math.round(data.target_age);
+          const finalShift = Math.round(data.shift_years);
+
           const transImg = data.transformed_image || data.transformed_url;
           const origImg = data.original_image || data.cropped_image || data.cropped_url;
           const compImg = data.comparison_image || data.comparison_url;
@@ -755,12 +771,13 @@ document.addEventListener('DOMContentLoaded', () => {
           if (imgComparisonPoster && compImg) imgComparisonPoster.src = compImg;
           if (btnDownloadPoster && compImg) {
             btnDownloadPoster.href = compImg;
-            btnDownloadPoster.download = `FutureFace_Age_${targetAge}.jpg`;
+            btnDownloadPoster.download = `FutureFace_Comparison_Target_${finalTargetAge || targetAge}.jpg`;
           }
-
-          const origAgeRounded = Math.round(data.estimated_age);
-          const finalTargetAge = Math.round(data.target_age);
-          const finalShift = Math.round(data.shift_years);
+          const btnDownloadTransformed = document.getElementById('btnDownloadTransformed');
+          if (btnDownloadTransformed && transImg) {
+            btnDownloadTransformed.href = transImg;
+            btnDownloadTransformed.download = `FutureFace_Transformed_Target_${finalTargetAge || targetAge}.jpg`;
+          }
 
           safeSetText(sliderBadgeOrig, `Original (${origAgeRounded} yrs)`);
           safeSetText(sliderBadgeTrans, `Transformed (${finalTargetAge} yrs)`);
@@ -831,7 +848,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resultPresentationBox) resultPresentationBox.classList.add('hidden');
         if (croppedFaceImg) croppedFaceImg.classList.add('hidden');
         if (thumbPlaceholder) thumbPlaceholder.classList.remove('hidden');
-        safeSetText(displayEstimatedAge, '20');
+        currentEstimatedAge = null;
+        safeSetText(displayEstimatedAge, '--');
+        const currentAgeHint = document.getElementById('currentAgeHint');
+        safeSetText(currentAgeHint, '(Upload or capture photo to estimate)');
+        safeSetText(targetAgeBadge, '--');
+        safeSetText(bannerSummaryText, 'Upload or capture a photo first to estimate age and choose transformation');
+        if (yearsSlider) {
+          yearsSlider.setAttribute('disabled', 'disabled');
+          yearsSlider.value = 50;
+        }
+        if (presetChipsContainer) {
+          presetChipsContainer.innerHTML = '<span class="no-presets-hint">Upload or capture a photo to unlock age shift presets</span>';
+        }
         stopWebcam();
         updateStepProgress(1);
         window.scrollTo({ top: 0, behavior: 'smooth' });
