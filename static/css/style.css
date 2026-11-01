@@ -3631,7 +3631,8 @@ html.dark .sun-icon { display: none; }
   color: #fecaca;
   font-size: 0.92rem;
   line-height: 1.5;
-  margin-bottom: 1.4rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0;
   animation: fadeIn 0.25s ease-out;
 }
 

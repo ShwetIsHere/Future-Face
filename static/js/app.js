@@ -290,7 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        const response = await fetch("/api/feedback", {
+        // Step 1: Verify with Multilingual AI Moderation Agent
+        const verifyResp = await fetch("/api/feedback/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -301,37 +302,62 @@ document.addEventListener('DOMContentLoaded', () => {
           })
         });
 
-        const data = await response.json();
+        const verifyData = await verifyResp.json();
 
-        if (response.ok && data.success) {
-          form.classList.add('hidden');
-          if (warningAlert) warningAlert.classList.add('hidden');
-          if (feedbackSuccessState) feedbackSuccessState.classList.remove('hidden');
-          if (typeof showToast === 'function') {
-            showToast("Thank you! Your feedback has been verified and received.", false);
-          } else {
-            alert("Thank you! Your feedback has been verified and received.");
-          }
-          form.reset();
-        } else {
-          const warnMsg = data.error || "Feedback could not be submitted.";
+        if (!verifyResp.ok || !verifyData.success) {
+          // AI Agent detected unethical, abusive, or irrelevant content!
+          const warnMsg = verifyData.error || "Feedback could not be submitted.";
           if (warningAlert && warningText) {
             warningText.textContent = warnMsg;
             warningAlert.classList.remove('hidden');
-            warningAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
           if (typeof showToast === 'function') {
             showToast(warnMsg, true);
-          } else {
-            alert(warnMsg);
           }
+          return;
         }
+
+        // Step 2: Content verified! Submit from client to Web3Forms (works cleanly on Free plan)
+        if (submitBtn) {
+          submitBtn.innerHTML = `<span>Sending feedback...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
+        }
+
+        const web3FormData = new FormData(form);
+        web3FormData.set("access_key", "82725bd8-bd34-4109-b8d1-8df7cc07337b");
+        web3FormData.set("name", name);
+        web3FormData.set("email", email);
+        web3FormData.set("message", message);
+        web3FormData.set("rating", `${userFeedbackRating} Stars — ${ratingHints[userFeedbackRating] || ''}`);
+        web3FormData.set("from_name", "FutureFace User Feedback");
+        web3FormData.set("subject", `New FutureFace Feedback (${userFeedbackRating} Stars) [AI-Verified]`);
+
+        try {
+          await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            body: web3FormData
+          });
+        } catch (wErr) {
+          console.warn("Web3Forms client notification note:", wErr);
+        }
+
+        // Step 3: Reveal customized success message
+        form.classList.add('hidden');
+        if (warningAlert) warningAlert.classList.add('hidden');
+        if (feedbackSuccessState) feedbackSuccessState.classList.remove('hidden');
+        if (typeof showToast === 'function') {
+          showToast("Thank you for giving your valuable time!", false);
+        }
+        form.reset();
+
       } catch (error) {
         console.error("Feedback submission error:", error);
+        const errMsg = "Something went wrong verifying your feedback. Please try again.";
+        if (warningAlert && warningText) {
+          warningText.textContent = errMsg;
+          warningAlert.classList.remove('hidden');
+        }
         if (typeof showToast === 'function') {
-          showToast("Network error submitting feedback. Please try again.", true);
-        } else {
-          alert("Network error submitting feedback. Please try again.");
+          showToast(errMsg, true);
         }
       } finally {
         if (submitBtn) {

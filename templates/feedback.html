@@ -22,16 +22,7 @@
     
     <!-- Feedback Form Card -->
     <div class="feedback-form-card card">
-      <!-- AI Moderation Warning Alert (Revealed if feedback violates ethics/relevance) -->
-      <div id="feedbackWarningAlert" class="feedback-warning-banner hidden">
-        <div class="warning-banner-icon">⚠️</div>
-        <div class="warning-banner-content">
-          <strong>Feedback Quality &amp; Ethics Notice:</strong>
-          <span id="feedbackWarningText">Please keep your feedback respectful and directly related to FutureFace.</span>
-        </div>
-      </div>
-
-      <form id="form" class="standalone-feedback-form" action="/api/feedback" method="POST">
+      <form id="form" class="standalone-feedback-form" onsubmit="event.preventDefault(); return false;" action="/api/feedback" method="POST">
         <input type="hidden" name="access_key" value="82725bd8-bd34-4109-b8d1-8df7cc07337b">
         <input type="hidden" name="subject" value="New FutureFace Feedback">
         <input type="hidden" name="from_name" value="FutureFace User Feedback">
@@ -85,6 +76,15 @@
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
         </button>
+
+        <!-- AI Moderation Warning Alert (Located Directly Under Submit Button) -->
+        <div id="feedbackWarningAlert" class="feedback-warning-banner hidden">
+          <div class="warning-banner-icon">⚠️</div>
+          <div class="warning-banner-content">
+            <strong>Warning:</strong>
+            <span id="feedbackWarningText">Please keep your feedback respectful and directly related to FutureFace.</span>
+          </div>
+        </div>
       </form>
 
       <!-- Feedback Success Message (Shown upon submission) -->
@@ -94,8 +94,8 @@
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
-        <h3>Thank You for Your Feedback!</h3>
-        <p>Your suggestions and rating have been received. We appreciate your support in making FutureFace better.</p>
+        <h3>Thank you for giving your valuable time!</h3>
+        <p>We have received your feedback and truly appreciate your thoughts. I will try to connect with you if possible.</p>
         <div class="success-actions-row">
           <a href="/try-now" class="btn btn-primary">Try Live Transformation</a>
           <a href="/" class="btn btn-secondary">Back to Home</a>
