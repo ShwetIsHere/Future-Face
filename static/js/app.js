@@ -317,27 +317,30 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Step 2: Content verified! Submit from client to Web3Forms (works cleanly on Free plan)
+        // Step 2: Content verified! Submit from client to Web3Forms using backend-secured key
         if (submitBtn) {
           submitBtn.innerHTML = `<span>Sending...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
         }
 
-        const web3FormData = new FormData(form);
-        web3FormData.set("access_key", "82725bd8-bd34-4109-b8d1-8df7cc07337b");
-        web3FormData.set("name", name);
-        web3FormData.set("email", email);
-        web3FormData.set("message", message);
-        web3FormData.set("rating", `${userFeedbackRating} Stars — ${ratingHints[userFeedbackRating] || ''}`);
-        web3FormData.set("from_name", "FutureFace User Feedback");
-        web3FormData.set("subject", `New FutureFace Feedback (${userFeedbackRating} Stars) [AI-Verified]`);
+        const accessKey = verifyData.access_key;
+        if (accessKey) {
+          const web3FormData = new FormData();
+          web3FormData.set("access_key", accessKey);
+          web3FormData.set("name", name);
+          web3FormData.set("email", email);
+          web3FormData.set("message", message);
+          web3FormData.set("rating", `${userFeedbackRating} Stars — ${ratingHints[userFeedbackRating] || ''}`);
+          web3FormData.set("from_name", "FutureFace User Feedback");
+          web3FormData.set("subject", `New FutureFace Feedback (${userFeedbackRating} Stars) [AI-Verified]`);
 
-        try {
-          await fetch("https://api.web3forms.com/submit", {
-            method: "POST",
-            body: web3FormData
-          });
-        } catch (wErr) {
-          console.warn("Web3Forms client notification note:", wErr);
+          try {
+            await fetch("https://api.web3forms.com/submit", {
+              method: "POST",
+              body: web3FormData
+            });
+          } catch (wErr) {
+            console.warn("Web3Forms client notification note:", wErr);
+          }
         }
 
         // Step 3: Reveal customized success message

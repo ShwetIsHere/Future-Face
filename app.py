@@ -38,7 +38,7 @@ def load_env_file():
                         k, v = line.split("=", 1)
                         k = k.strip()
                         v = v.strip().strip("'\"")
-                        if k and k not in os.environ:
+                        if k:
                             os.environ[k] = v
             print("[Init] Loaded environment configuration from .env")
         except Exception as e:
@@ -579,9 +579,14 @@ def api_feedback():
             }), 422
 
         print(f"[Feedback Approved by AI] User: {name} | Rating: {rating} | Email: {email}")
+        
+        # Web3Forms key retrieved securely from server environment (.env on VM)
+        web3_key = os.environ.get("WEB3FORMS_ACCESS_KEY", "").strip()
+
         return jsonify({
             "success": True,
             "verified": True,
+            "access_key": web3_key,
             "message": "Feedback verified successfully."
         })
 
