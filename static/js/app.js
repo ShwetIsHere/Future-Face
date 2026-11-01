@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const originalBtnContent = submitBtn ? submitBtn.innerHTML : 'Submit Feedback';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span>Checking with AI Agent...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
+        submitBtn.innerHTML = `<span>Submitting...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
       }
 
       try {
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Step 2: Content verified! Submit from client to Web3Forms (works cleanly on Free plan)
         if (submitBtn) {
-          submitBtn.innerHTML = `<span>Sending feedback...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
+          submitBtn.innerHTML = `<span>Sending...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
         }
 
         const web3FormData = new FormData(form);
