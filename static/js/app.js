@@ -250,51 +250,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (form) {
     const submitBtn = form.querySelector('button[type="submit"]');
+    const warningAlert = document.getElementById('feedbackWarningAlert');
+    const warningText = document.getElementById('feedbackWarningText');
+
+    // Auto-dismiss warning when user edits inputs
+    ['feedbackName', 'feedbackEmail', 'feedbackMessage'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => {
+          if (warningAlert && !warningAlert.classList.contains('hidden')) {
+            warningAlert.classList.add('hidden');
+          }
+        });
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const formData = new FormData(form);
-      formData.append("access_key", "82725bd8-bd34-4109-b8d1-8df7cc07337b");
-      formData.set("rating", `${userFeedbackRating} Stars — ${ratingHints[userFeedbackRating] || ''}`);
+      if (warningAlert) warningAlert.classList.add('hidden');
+
+      const nameInput = document.getElementById('feedbackName');
+      const emailInput = document.getElementById('feedbackEmail');
+      const messageInput = document.getElementById('feedbackMessage');
+
+      const name = nameInput ? nameInput.value.trim() : '';
+      const email = emailInput ? emailInput.value.trim() : '';
+      const message = messageInput ? messageInput.value.trim() : '';
+
+      if (!message) {
+        if (typeof showToast === 'function') showToast('Please enter your feedback message.', true);
+        return;
+      }
 
       const originalBtnContent = submitBtn ? submitBtn.innerHTML : 'Submit Feedback';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span>Sending...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
+        submitBtn.innerHTML = `<span>Checking with AI Agent...</span> <div class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-left:8px;"></div>`;
       }
 
       try {
-        const response = await fetch("https://api.web3forms.com/submit", {
+        const response = await fetch("/api/feedback", {
           method: "POST",
-          body: formData
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            rating: `${userFeedbackRating} Stars — ${ratingHints[userFeedbackRating] || ''}`,
+            message: message
+          })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
           form.classList.add('hidden');
+          if (warningAlert) warningAlert.classList.add('hidden');
           if (feedbackSuccessState) feedbackSuccessState.classList.remove('hidden');
           if (typeof showToast === 'function') {
-            showToast("Success! Your message has been sent.", false);
+            showToast("Thank you! Your feedback has been verified and received.", false);
           } else {
-            alert("Success! Your message has been sent.");
+            alert("Thank you! Your feedback has been verified and received.");
           }
           form.reset();
         } else {
-          const errMsg = data.message || "Failed to submit feedback.";
+          const warnMsg = data.error || "Feedback could not be submitted.";
+          if (warningAlert && warningText) {
+            warningText.textContent = warnMsg;
+            warningAlert.classList.remove('hidden');
+            warningAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
           if (typeof showToast === 'function') {
-            showToast("Error: " + errMsg, true);
+            showToast(warnMsg, true);
           } else {
-            alert("Error: " + errMsg);
+            alert(warnMsg);
           }
         }
       } catch (error) {
-        console.error("Web3Forms submission error:", error);
+        console.error("Feedback submission error:", error);
         if (typeof showToast === 'function') {
-          showToast("Something went wrong. Please try again.", true);
+          showToast("Network error submitting feedback. Please try again.", true);
         } else {
-          alert("Something went wrong. Please try again.");
+          alert("Network error submitting feedback. Please try again.");
         }
       } finally {
         if (submitBtn) {

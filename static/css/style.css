@@ -3620,6 +3620,43 @@ html.dark .sun-icon { display: none; }
   padding: 2.2rem;
 }
 
+.feedback-warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.25rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  color: #fecaca;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin-bottom: 1.4rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.feedback-warning-banner.hidden {
+  display: none !important;
+}
+
+.warning-banner-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.warning-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.warning-banner-content strong {
+  color: #f87171;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
 .standalone-feedback-form {
   display: flex;
   flex-direction: column;
