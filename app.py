@@ -13,12 +13,25 @@ from pathlib import Path
 
 import cv2
 import torch
-import requests
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms
 from torchvision.models import resnet50
 from flask import Flask, render_template, request, jsonify
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 # ============================================================
 # PATHS AND CONFIGURATION
@@ -527,14 +540,31 @@ def moderate_feedback_with_ai(name, message):
     print(f"[Moderation Agent] Querying {provider} [{model}] to verify feedback: {message!r}")
 
     try:
-        resp = requests.post(
-            endpoint,
-            headers=headers,
-            json=payload,
-            timeout=10
-        )
-        if resp.status_code == 200:
-            result_data = resp.json()
+        global requests
+        if requests is not None:
+            resp = requests.post(
+                endpoint,
+                headers=headers,
+                json=payload,
+                timeout=10
+            )
+            resp_status = resp.status_code
+            resp_text = resp.text
+            result_data = resp.json() if resp_status == 200 else None
+        else:
+            import urllib.request
+            req = urllib.request.Request(
+                endpoint,
+                data=json.dumps(payload).encode("utf-8"),
+                headers=headers,
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as url_resp:
+                resp_status = url_resp.status
+                resp_text = url_resp.read().decode("utf-8")
+                result_data = json.loads(resp_text)
+
+        if resp_status == 200 and result_data:
             raw_text = result_data["choices"][0]["message"]["content"].strip()
             # Clean markdown formatting if present
             if raw_text.startswith("```"):
@@ -547,7 +577,7 @@ def moderate_feedback_with_ai(name, message):
             print(f"[Moderation Agent] {provider} Evaluation -> Approved: {approved} | Reason: {reason}")
             return approved, reason
         else:
-            print(f"[Moderation Error] {provider} API returned status {resp.status_code}: {resp.text}")
+            print(f"[Moderation Error] {provider} API returned status {resp_status}: {resp_text}")
             return fallback_moderation(message)
     except Exception as e:
         print(f"[Moderation Error] Call to {provider} failed: {e}")
@@ -783,6 +813,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print("\n" + "=" * 65)
     print(f"Future-Face Web Application is running at:")
-    print(f"👉 http://{host}:{port}")
+    print(f" -> http://{host}:{port}")
+    print(f" -> http://127.0.0.1:{port}")
     print("=" * 65 + "\n")
     app.run(host=host, port=port, debug=False)

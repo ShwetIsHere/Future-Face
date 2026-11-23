@@ -5,10 +5,48 @@ title Future-Face - Age Transformation Launcher
 REM Restore standard Windows paths first.
 set "PATH=%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0;%PATH%"
 
-set "PROJECT_DIR=E:\Face Convert\Fature-Face"
-set "PYTHON_EXE=C:\Users\SHWET\.conda\envs\sam_env\python.exe"
-set "CONDA_PREFIX=C:\Users\SHWET\.conda\envs\sam_env"
-set "VSVARS=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+REM Dynamically detect project root directory from batch file location
+set "PROJECT_DIR=%~dp0"
+if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
+
+REM Detect Python environment (sam_env conda environment or local venv)
+set "PYTHON_EXE="
+set "CONDA_PREFIX="
+
+if exist "%USERPROFILE%\.conda\envs\sam_env\python.exe" (
+  set "PYTHON_EXE=%USERPROFILE%\.conda\envs\sam_env\python.exe"
+  set "CONDA_PREFIX=%USERPROFILE%\.conda\envs\sam_env"
+) else if exist "C:\Users\SHWET\.conda\envs\sam_env\python.exe" (
+  set "PYTHON_EXE=C:\Users\SHWET\.conda\envs\sam_env\python.exe"
+  set "CONDA_PREFIX=C:\Users\SHWET\.conda\envs\sam_env"
+) else if exist "C:\ProgramData\anaconda3\envs\sam_env\python.exe" (
+  set "PYTHON_EXE=C:\ProgramData\anaconda3\envs\sam_env\python.exe"
+  set "CONDA_PREFIX=C:\ProgramData\anaconda3\envs\sam_env"
+) else if exist "C:\Users\%USERNAME%\miniconda3\envs\sam_env\python.exe" (
+  set "PYTHON_EXE=C:\Users\%USERNAME%\miniconda3\envs\sam_env\python.exe"
+  set "CONDA_PREFIX=C:\Users\%USERNAME%\miniconda3\envs\sam_env"
+) else if exist "%PROJECT_DIR%\venv\Scripts\python.exe" (
+  set "PYTHON_EXE=%PROJECT_DIR%\venv\Scripts\python.exe"
+) else (
+  set "PYTHON_EXE=python.exe"
+)
+
+REM Detect Visual Studio C++ Build Tools
+set "VSVARS="
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
+  set "VSVARS=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+) else if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+  set "VSVARS=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+) else if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
+  set "VSVARS=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+) else if exist "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
+  set "VSVARS=C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat"
+) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
+  set "VSVARS=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat" (
+  set "VSVARS=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+)
+
 set "LAUNCHER=%PROJECT_DIR%\Future-Face.py"
 
 echo.
@@ -32,22 +70,12 @@ if not exist "%LAUNCHER%" (
   echo "%LAUNCHER%"
   goto :fail
 )
-if not exist "%VSVARS%" (
-  echo ERROR: Visual Studio C++ setup script not found:
-  echo "%VSVARS%"
-  goto :fail
+if defined CONDA_PREFIX (
+  set "PATH=%CONDA_PREFIX%;%CONDA_PREFIX%\Scripts;%CONDA_PREFIX%\Library\bin;%PATH%"
+  set "CONDA_DEFAULT_ENV=sam_env"
 )
-
-cd /d "%PROJECT_DIR%"
-if errorlevel 1 (
-  echo ERROR: Could not enter the Future-Face folder.
-  goto :fail
-)
-
-set "PATH=%CONDA_PREFIX%;%CONDA_PREFIX%\Scripts;%CONDA_PREFIX%\Library\bin;%PATH%"
 set "PYTHONHOME="
 set "PYTHONPATH="
-set "CONDA_DEFAULT_ENV=sam_env"
 
 echo [1/4] Checking Python, PyTorch, CUDA, GPU, and OpenCV...
 "%PYTHON_EXE%" -c "import sys,torch,cv2; print('Python:',sys.executable); print('PyTorch:',torch.__version__); print('CUDA available:',torch.cuda.is_available()); print('GPU:',torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'Not detected'); print('OpenCV:',cv2.__version__)"
@@ -61,15 +89,16 @@ if errorlevel 1 (
 
 echo.
 echo [2/4] Initializing Visual Studio C++ Build Tools...
-call "%VSVARS%" >nul
+where.exe cl.exe >nul 2>&1
 if errorlevel 1 (
-  echo ERROR: Could not initialize Visual Studio C++ Build Tools.
-  goto :fail
+  if defined VSVARS (
+    call "%VSVARS%" >nul 2>&1
+  )
 )
 where.exe cl.exe
 if errorlevel 1 (
-  echo ERROR: cl.exe is not available after initializing Build Tools.
-  goto :fail
+  echo WARNING: cl.exe compiler not found in PATH.
+  echo Pure PyTorch CPU/CUDA operations will be used as fallback.
 )
 
 echo.

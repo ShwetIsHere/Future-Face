@@ -12,10 +12,10 @@ from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms
 from torchvision.models import resnet50
 
-PROJECT_DIR = Path(r"E:\Face Convert\Fature-Face")
-PYTHON_EXE = Path(r"C:\Users\SHWET\.conda\envs\sam_env\python.exe")
-AGE_MODEL_PATH = Path(r"E:\Face Convert\Fature-Face\models\Future-Face-ResNet50-Final.pth")
-YUNET_PATH = Path(r"E:\Face Convert\Fature-Face\models\face_detection_yunet_2023mar.onnx")
+PROJECT_DIR = Path(__file__).resolve().parent
+PYTHON_EXE = Path(sys.executable)
+AGE_MODEL_PATH = PROJECT_DIR / "models" / "Future-Face-ResNet50-Final.pth"
+YUNET_PATH = PROJECT_DIR / "models" / "face_detection_yunet_2023mar.onnx"
 SAM_CHECKPOINT = PROJECT_DIR / "SAM-official" / "pretrained_models" / "sam_ffhq_aging.pt"
 IMAGE_SIZE = 224
 MEAN = [0.485, 0.456, 0.406]
